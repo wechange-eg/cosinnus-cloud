@@ -1,4 +1,6 @@
 import logging
+import secrets
+import string
 
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import quote
@@ -78,6 +80,11 @@ def _response_or_raise(requests_response: requests.Response):
 
 
 def create_user(userid: str, display_name: str, email: str, groups: Sequence[str]) -> OCSResponse:
+    
+    # We don't want the user to receive an email asking him to set a password, as the
+    # login will be done via OAuth, so we just set a random password
+    random_password = ''.join(secrets.choice(string.ascii_letters + string.punctuation + string.digits) for _ in range(32))
+    
     res = requests.post(
         f"{PREFIX}/ocs/v1.php/cloud/users", 
         auth=AUTH,
@@ -87,6 +94,7 @@ def create_user(userid: str, display_name: str, email: str, groups: Sequence[str
             "displayName": display_name,
             "email": email,
             "groups": groups,
+            "password": random_password
         })
     return _response_or_raise(res)
 
