@@ -12,7 +12,7 @@ cosinnus_root_patterns = []
 
 cosinnus_group_patterns = [
     url(r'^stub/$', views.cloud_stub_view, name='stub'),
-    
+    url(r'^oauth2/$', views.oauth_view, name='oauth2'),
     url(r'^$', views.cloud_index_view, name='index'),
 ]
 

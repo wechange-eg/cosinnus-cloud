@@ -53,6 +53,7 @@ setup(
     data_files=data_files,
     install_requires=[
         'cosinnus>=0.4.2.dev0',
+        'requests>=2.20.0',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -60,11 +61,9 @@ setup(
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Framework :: Django',
     ],
     zip_safe=False,

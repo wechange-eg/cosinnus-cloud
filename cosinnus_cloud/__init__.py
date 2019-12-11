@@ -7,7 +7,6 @@ VERSION = (0, 6, 0, 'alpha', 0)
 
 default_app_config = 'cosinnus_cloud.apps.CosinnusCloudAppConfig'
 
-
 def get_version(full=True):
     """Derives a PEP386-compliant version number from VERSION.
 
