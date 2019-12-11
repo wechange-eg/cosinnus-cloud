@@ -18,3 +18,6 @@ def register():
 
     # makemessages replacement protection
     name = pgettext_lazy("the_app", "cloud")
+    
+    import cosinnus_cloud.hooks # noqa
+    
