@@ -17,9 +17,11 @@ $ ip addr
 And look for an entry for "br-xxxxxxxxx" where xxx is a random string, or "docker0"
 it will look something like this:
 
+```
 1067: br-cf89f830787c: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
     link/ether 02:42:50:77:1e:52 brd ff:ff:ff:ff:ff:ff
     inet 172.17.0.1/16 brd 172.17.255.255 scope global br-cf89f830787c
+```
 
 The 172.17.0.1 is the important part (it can also be 172.18, 19, or 20)
 (You might see a "docker0" link with an IP of 192.168.x.x, you can ignore that one)
@@ -125,16 +127,16 @@ Then go to http://wechange-dev/nextcloud/settings/admin/sociallogin
 
 Activate "update user profile at login", and add a new Custom OAuth Server (not Custom OpenID Connect)
 
-Internal name: wechange
-Name: wechange
-API-Base: http://wechange-dev/o
-Authorize-URL: http://wechange-dev/o/authorize/  (contrary to what the UI claims, the url cannot be relative)
-Token-URL: http://wechange-dev/o/token
-Profile-URL: http://wechange-dev/group/forum/cloud/oauth2/
-Logout-URL: (empty)
-Client ID: foobar
-Clinet Secret: barfoo
-Scope: read
+* Internal name: wechange
+* Name: wechange
+* API-Base: http://wechange-dev/o
+* Authorize-URL: http://wechange-dev/o/authorize/  (contrary to what the UI claims, the url cannot be relative)
+* Token-URL: http://wechange-dev/o/token
+* Profile-URL: http://wechange-dev/group/forum/cloud/oauth2/
+* Logout-URL: (empty)
+* Client ID: foobar
+* Client Secret: barfoo
+* Scope: read
 
 Then save
 
