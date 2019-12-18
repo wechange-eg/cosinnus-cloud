@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 import cosinnus_cloud.hooks
 from cosinnus.utils.urls import group_aware_reverse
 from cosinnus.views.mixins.group import RequireReadMixin
+from cosinnus.models.group import CosinnusGroup
 
 logger = logging.getLogger('cosinnus')
 
@@ -32,7 +33,7 @@ class CloudStubView(RequireReadMixin, TemplateView):
         context = super(CloudStubView, self).get_context_data(*args, **kwargs)
         context.update({
             #'iframe_url': 'http://pratchett/nextcloud/apps/sociallogin/custom_oauth2/wechange',
-            'iframe_url': 'http://pratchett/nextcloud'
+            'iframe_url': 'http://wechange-dev/nextcloud'
         })
         return context
 
@@ -53,7 +54,7 @@ class OAuthView(APIView):
                 'id': user.id,
                 'email': user.email,
                 'displayName': f'{user.first_name} {user.last_name}',
-                'groups': ['foo', 'baz'],
+                'groups': [group.name for group in CosinnusGroup.objects.get_for_user(user)],
             })
         else:
             return JsonResponse({

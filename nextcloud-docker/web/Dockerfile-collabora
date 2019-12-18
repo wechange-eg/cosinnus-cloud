@@ -1,0 +1,3 @@
+FROM nginx:alpine
+
+COPY nginx-collabora.conf /etc/nginx/nginx.conf

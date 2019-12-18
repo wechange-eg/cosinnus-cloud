@@ -1,0 +1,76 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:12-alpine
+    restart: always
+    volumes:
+      - db:/var/lib/postgresql/data
+    env_file:
+      - db.env
+
+  app:
+    image: nextcloud:17-fpm-alpine
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=nextcloud
+      - NEXTCLOUD_ADMIN_USER=admin
+      - NEXTCLOUD_ADMIN_PASSWORD=admin
+      - NEXTCLOUD_TRUSTED_DOMAINS=wechange-dev
+      - NEXTCLOUD_TABLE_PREFIX=
+    env_file:
+      - db.env
+    depends_on:
+      - db
+    networks:
+      - default
+    extra_hosts:
+      - "wechange-dev:172.22.0.1"
+
+  web:
+    build: 
+      context: ./web
+      dockerfile: Dockerfile-collabora
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html:ro
+    depends_on:
+      - app
+      - collabora
+    environment:
+      - VIRTUAL_HOST=wechange-dev
+    networks:
+      default:
+
+  collabora:
+    image: collabora/code:latest
+    restart: always
+    networks:
+      - default
+    cap_add:
+      - MKNOD
+    environment:
+      - SLEEPFORDEBUGGER=0
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:allowed_languages="de_DE en_US"
+      - domain=wechange-dev
+      - DONT_GEN_SSL_CERT=x
+
+  proxy:
+    build: ./proxy
+    restart: always
+    volumes:
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    ports:
+      - "8080:80"
+      - "8443:443"
+
+volumes:
+  db:
+  nextcloud:
+  html:
+  vhost.d:
