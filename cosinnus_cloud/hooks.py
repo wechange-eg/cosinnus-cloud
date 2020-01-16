@@ -86,3 +86,27 @@ def group_created_sub(sender, group, **kwargs):
 
     submit_with_retry(nextcloud.create_group, f"wechange-{group.name}")
     submit_with_retry(nextcloud.create_group_folder, f"wechange-{group.name}")
+
+# maybe listen to user_logged_in and user_logged_out too?
+# https://docs.djangoproject.com/en/3.0/ref/contrib/auth/#django.contrib.auth.signals.user_logged_in
+
+@receiver(signals.user_deactivated)
+def user_deactivated(sender, user, **kwargs):
+    logger.warn('User %s was deactivated' % user.username)
+
+
+@receiver(signals.user_activated)
+def user_activated(sender, user, **kwargs):
+    logger.warn('User %s was activated' % user.username)
+    
+    
+@receiver(signals.group_deactivated)
+def group_deactivated(sender, group, **kwargs):
+    logger.warn('Group "%s" was deactivated' % group.slug)
+
+
+@receiver(signals.group_reactivated)
+def group_reactivated(sender, group, **kwargs):
+    logger.warn('Group "%s" was reactivated' % group.slug)
+    
+    
