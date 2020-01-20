@@ -101,11 +101,10 @@ app_1        | [18-Dec-2019 16:26:45] NOTICE: ready to handle connections
 
 press Ctrl+C
 
-do 
+then do (the docker-compose container must be running for this to work)
 
 $ docker-compose exec app su www-data -s /bin/sh -c './occ config:system:set overwritewebroot --value /nextcloud'
 
-(make sure that the container is running)
 
 You should now be able to visit http://wechange-dev/nextcloud and see the login screen
 
@@ -165,4 +164,4 @@ Change domainname in http://localhost/admin/sites/site to wechange-dev
 # You're set
 
 You should be able to visit http://wechange-dev/group/forum/cloud and log in by clicking on "login with wechange". If you get an
-internal error that wechange-dev cannot be reached, the docker ip might have changed. Do `ip addr`  again and edit the "wechange-dev:172.x.x.x" entry in the docker-compose.yml file, then do docker-compose restart
+internal error that wechange-dev cannot be reached, the docker ip might have changed. Do `ip addr`  again and edit the "wechange-dev:172.x.x.x" entry in the docker-compose.yml file, then do `docker-compose restart`
