@@ -105,11 +105,13 @@ do
 
 $ docker-compose exec app su www-data -s /bin/sh -c './occ config:system:set overwritewebroot --value /nextcloud'
 
+(make sure that the container is running)
+
 You should now be able to visit http://wechange-dev/nextcloud and see the login screen
 
 # Configure oauth2 application in cosinnus
 
-At the time of writing, the oauth2_provider application config interface is broken, so we have to add the data manually. Connect to your Postgres database, and execute:
+At the time of writing, the oauth2_provider application config interface is broken, so we have to add the data manually. Connect to your WECHANGE Postgres database (not the postgres used in docker-compose; that one is used by Nextcloud), and execute:
 
 ```
 insert into oauth2_provider_application (client_id, client_secret, client_type, redirect_uris, authorization_grant_type, name, skip_authorization, created, updated) values ('foobar', 'barfoo', 'public', 'http://wechange-dev/nextcloud/apps/sociallogin/custom_oauth2/wechange', 'authorization-code', 'nextcloud', true, now(), now());
