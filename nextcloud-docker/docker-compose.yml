@@ -10,7 +10,7 @@ services:
       - db.env
 
   app:
-    image: nextcloud:17-fpm-alpine
+    image: nextcloud:18-fpm-alpine
     restart: always
     volumes:
       - nextcloud:/var/www/html
@@ -33,30 +33,15 @@ services:
   web:
     build: 
       context: ./web
-      dockerfile: Dockerfile-collabora
     restart: always
     volumes:
       - nextcloud:/var/www/html:ro
     depends_on:
       - app
-      - collabora
     environment:
       - VIRTUAL_HOST=wechange-dev
     networks:
       default:
-
-  collabora:
-    image: collabora/code:latest
-    restart: always
-    networks:
-      - default
-    cap_add:
-      - MKNOD
-    environment:
-      - SLEEPFORDEBUGGER=0
-      - extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:allowed_languages="de_DE en_US"
-      - domain=wechange-dev
-      - DONT_GEN_SSL_CERT=x
 
   proxy:
     build: ./proxy
