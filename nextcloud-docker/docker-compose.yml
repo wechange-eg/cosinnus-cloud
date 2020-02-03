@@ -28,7 +28,7 @@ services:
     networks:
       - default
     extra_hosts:
-      - "wechange-dev:172.22.0.1"
+      - "wechange-dev:192.168.123.1"
 
   web:
     build: 
@@ -43,6 +43,16 @@ services:
     networks:
       default:
 
+  onlyoffice:
+    image: onlyoffice/documentserver
+    stdin_open: true
+    tty: true
+    restart: always
+    volumes:
+      - oo_data:/var/www/onlyoffice/Data
+    extra_hosts:
+      - "wechange-dev:192.168.123.1"
+    
   proxy:
     build: ./proxy
     restart: always
@@ -59,3 +69,11 @@ volumes:
   nextcloud:
   html:
   vhost.d:
+  oo_data:
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.123.0/24

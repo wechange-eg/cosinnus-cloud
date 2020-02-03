@@ -8,26 +8,6 @@ You need:
 * Docker-Compose
 * an nginx installation (that will proxy the docker nginx that proxies another docker nginx...)
 
-# Modify nextcloud-docker/docker-compose.yml
-
-First, check what IP address docker chose for its internal network.
-
-$ ip addr
-
-And look for an entry for "br-xxxxxxxxx" where xxx is a random string, or "docker0"
-it will look something like this:
-
-```
-1067: br-cf89f830787c: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
-    link/ether 02:42:50:77:1e:52 brd ff:ff:ff:ff:ff:ff
-    inet 172.17.0.1/16 brd 172.17.255.255 scope global br-cf89f830787c
-```
-
-The 172.17.0.1 is the important part (it can also be 172.18, 19, or 20)
-(You might see a "docker0" link with an IP of 192.168.x.x, you can ignore that one)
-
-Now, edit the line "wechange-dev:172.17.0.1" in the extra_hosts section to the 172.x.0.1 IP your Docker has.
-
 # Edit /etc/hosts
 
 add an entry
@@ -46,13 +26,11 @@ in /etc/nginx/sites-available, add a new file "wechange" (name is not important)
 server {
     listen 80;
     server_name wechange-dev;
-    access_log /tmp/nginx.log;
+    access_log /tmp/nginx-wechange-dev.log;
 
     location /nextcloud/ {
         proxy_pass http://127.0.0.1:8080/;
         proxy_set_header Host $host;
-        #proxy_set_header X-Real-IP $remote_addr;
-        #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 
     location / {
@@ -73,11 +51,16 @@ then restart nginx.
 
 cd to nextcloud-docker and execute
 
+$ docker-compose up db
+
+and then wait until you see "database system is ready to accept connections"; you can then press Ctrl-C to stop the container.
+This step ensures that the database will be available quickly once the app container starts (there seems to be a race condition that prevents nextcloud from initializing correctly if the database is not reachable). This step is only necessary once.
+
+Then do
+
 $ docker-compose up -d
 
 you can also omit the `-d` if you want to see the log output without having to execute docker-compose logs
-
-collabora will spam a lot of text about creating symlinks at startup, that is normal
 
 # Update the config.php file in the container
 
@@ -87,7 +70,7 @@ Now wait until you see "Nextcloud was sucessfully installed"
 
 ```
 Attaching to nextcloud-docker_app_1
-app_1        | Initializing nextcloud 17.0.1.1 ...
+app_1        | Initializing nextcloud 18.0.0.10 ...
 app_1        | Initializing finished
 app_1        | New nextcloud instance
 app_1        | Installing with PostgreSQL database
@@ -104,6 +87,7 @@ press Ctrl+C
 then do (the docker-compose container must be running for this to work)
 
 $ docker-compose exec app su www-data -s /bin/sh -c './occ config:system:set overwritewebroot --value /nextcloud'
+$ docker-compose exec app su www-data -s /bin/sh -c 'for x in onlyoffice sociallogin; do ./occ app:install $x;done'
 
 You should now be able to visit http://wechange-dev/nextcloud and see the login screen
 
@@ -119,11 +103,9 @@ Obviously, "foobar"/"barfoo" should not be used in production.
 
 # Add necessary modules
 
-Go to http://wechange-dev/nextcloud and log in as "admin", password "admin"
 
-Then visit http://wechange-dev/nextcloud/settings/apps/integration and install the "Social Login" app
 
-Then go to http://wechange-dev/nextcloud/settings/admin/sociallogin
+Go to http://wechange-dev/nextcloud/settings/admin/sociallogin (log in as "admin", password "admin")
 
 Activate "update user profile at login", and add a new Custom OAuth Server (not Custom OpenID Connect)
 
@@ -140,7 +122,17 @@ Activate "update user profile at login", and add a new Custom OAuth Server (not 
 
 Then save
 
+Go to http://wechange-dev/nextcloud/settings/admin/onlyoffice
+
+* Document Editing Service address: /oo/
+* Advanced Server Settings
+    * Document Editing Service address for internal requests from the server: http://onlyoffice/
+    * Server address for internal requests from the Document Editing Service: http://wechange-dev/nextcloud
+
+and save. 
+
 Now go to http://wechange-dev/nextcloud/settings/users and add a new group named "wechange-Forum"
+
 
 Go to http://wechange-dev/nextcloud/apps/files/ and create a new folder in the root directory and name it "Groupfolders"
 
