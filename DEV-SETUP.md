@@ -105,7 +105,6 @@ then do (the docker-compose container must be running for this to work)
 
 $ docker-compose exec app su www-data -s /bin/sh -c './occ config:system:set overwritewebroot --value /nextcloud'
 
-
 You should now be able to visit http://wechange-dev/nextcloud and see the login screen
 
 # Configure oauth2 application in cosinnus

@@ -7,11 +7,6 @@ from cosinnus.conf import settings
 from django.core.signals import request_finished
 from django.dispatch import receiver
 
-@receiver(request_finished)
-def foo(sender, **bla):
-    print(f"finished {sender} {bla}")
-
-
 def register():
     if 'cosinnus_cloud' in getattr(settings, 'COSINNUS_DISABLED_COSINNUS_APPS', []):
         return
