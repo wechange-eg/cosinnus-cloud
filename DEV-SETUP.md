@@ -106,9 +106,7 @@ insert into oauth2_provider_application (client_id, client_secret, client_type, 
 
 Obviously, "foobar"/"barfoo" should not be used in production.
 
-# Add necessary modules
-
-
+# Configure necessary modules
 
 Go to http://wechange-dev/nextcloud/settings/admin/sociallogin (log in as "admin", password "admin")
 
