@@ -26,11 +26,16 @@ in /etc/nginx/sites-available, add a new file "wechange" (name is not important)
 server {
     listen 80;
     server_name wechange-dev;
-    access_log /tmp/nginx-wechange-dev.log;
+    access_log /tmp/nginx.log;
 
     location /nextcloud/ {
         proxy_pass http://127.0.0.1:8080/;
+        proxy_redirect off;
         proxy_set_header Host $host;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 
     location / {
@@ -113,7 +118,7 @@ Activate "update user profile at login", and add a new Custom OAuth Server (not 
 * Name: wechange
 * API-Base: http://wechange-dev/o
 * Authorize-URL: http://wechange-dev/o/authorize/  (contrary to what the UI claims, the url cannot be relative)
-* Token-URL: http://wechange-dev/o/token
+* Token-URL: http://wechange-dev/o/token/   (mind the trailing slash)
 * Profile-URL: http://wechange-dev/group/forum/cloud/oauth2/
 * Logout-URL: (empty)
 * Client ID: foobar
