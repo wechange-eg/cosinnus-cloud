@@ -32,7 +32,7 @@ def submit_with_retry(fn, *args, **kwargs):
             except Exception as e:
                 try:
                     delay = retry_wait.pop(0)
-                    logger.warn(
+                    logger.warning(
                         "Nextcloud call %s(%s, %s) failed. Retrying in %ds (%d tries left)",
                         fn.__name__,
                         args,
@@ -44,7 +44,7 @@ def submit_with_retry(fn, *args, **kwargs):
                     sleep(delay)
                     continue
                 except IndexError:
-                    logger.warn(
+                    logger.warning(
                         "Nextcloud call %s(%s, %s) failed. Giving up",
                         fn.__name__,
                         args,
@@ -59,7 +59,7 @@ def submit_with_retry(fn, *args, **kwargs):
 def nc_req_callback(future: Future):
     try:
         res = future.result()
-    except Exception as e:
+    except Exception:
         logger.exception("Nextcloud remote call resulted in an exception")
     else:
         logger.debug("Nextcloud call finished with result %r", res)
@@ -74,7 +74,7 @@ def user_joined_group_receiver_sub(sender, user, group, **kwargs):
         group.name,
     )
     submit_with_retry(
-        nextcloud.add_user_to_group, f"wechange-{user.id}", f"wechange-{group.name}"
+        nextcloud.add_user_to_group, f"wechange-{user.id}", group.nextcloud_group_id
     )
 
 
@@ -89,7 +89,7 @@ def user_left_group_receiver_sub(sender, user, group, **kwargs):
     submit_with_retry(
         nextcloud.remove_user_from_group,
         f"wechange-{user.id}",
-        f"wechange-{group.name}",
+        group.nextcloud_group_id,
     )
 
 
@@ -97,14 +97,16 @@ def user_left_group_receiver_sub(sender, user, group, **kwargs):
 @receiver(signals.userprofile_ceated)
 def userprofile_created_sub(sender, profile, **kwargs):
     user = profile.user
-    logger.debug("Userprofile created, adding user [%s] to nextcloud ", full_name(user))
+    logger.debug(
+        "User profile created, adding user [%s] to nextcloud ", full_name(user)
+    )
     submit_with_retry(
         nextcloud.create_user,
         f"wechange-{user.id}",
         full_name(user),
         user.email,
         [
-            f"wechange-{group.name}"
+            group.nextcloud_group_id
             for group in CosinnusGroup.objects.get_for_user(user)
         ],
     )
@@ -112,10 +114,17 @@ def userprofile_created_sub(sender, profile, **kwargs):
 
 @receiver(signals.group_object_created)
 def group_created_sub(sender, group, **kwargs):
-    logger.debug("Creating new group [%s] in Nextcloud", group.name)
 
-    submit_with_retry(nextcloud.create_group, f"wechange-{group.name}")
-    submit_with_retry(nextcloud.create_group_folder, f"wechange-{group.name}")
+    group.nextcloud_group_id = f"wechange-{group.name}"
+
+    logger.debug(
+        "Creating new group [%s] in Nextcloud (wechange group name [%s])",
+        group.nextcloud_group_id,
+        group.name,
+    )
+
+    submit_with_retry(nextcloud.create_group, group.nextcloud_group_id)
+    submit_with_retry(nextcloud.create_group_folder, group.nextcloud_group_id)
 
 
 # maybe listen to user_logged_in and user_logged_out too?
@@ -124,19 +133,19 @@ def group_created_sub(sender, group, **kwargs):
 
 @receiver(signals.user_deactivated)
 def user_deactivated(sender, user, **kwargs):
-    logger.warn("User %s was deactivated" % user.username)
+    logger.warning("User %s was deactivated" % user.username)
 
 
 @receiver(signals.user_activated)
 def user_activated(sender, user, **kwargs):
-    logger.warn("User %s was activated" % user.username)
+    logger.warning("User %s was activated" % user.username)
 
 
 @receiver(signals.group_deactivated)
 def group_deactivated(sender, group, **kwargs):
-    logger.warn('Group "%s" was deactivated' % group.slug)
+    logger.warning('Group "%s" was deactivated' % group.slug)
 
 
 @receiver(signals.group_reactivated)
 def group_reactivated(sender, group, **kwargs):
-    logger.warn('Group "%s" was reactivated' % group.slug)
+    logger.warning('Group "%s" was reactivated' % group.slug)

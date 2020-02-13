@@ -32,5 +32,5 @@ from django.utils.translation import ugettext_lazy as _
         :protocol Current portocol, 'http' or 'https'
         
     
-""" 
+"""
 notifications = {}
