@@ -127,7 +127,7 @@ Then save
 
 Go to http://wechange-dev/nextcloud/settings/admin/onlyoffice
 
-* Document Editing Service address: /oo/
+* Document Editing Service address: /nextcloud/oo/
 * Advanced Server Settings
     * Document Editing Service address for internal requests from the server: http://onlyoffice/
     * Server address for internal requests from the Document Editing Service: http://wechange-dev/nextcloud/
