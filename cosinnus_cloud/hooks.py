@@ -56,6 +56,10 @@ def submit_with_retry(fn, *args, **kwargs):
     executor.submit(exec_with_retry).add_done_callback(nc_req_callback)
 
 
+def get_nc_user_id(user):
+    return f"wechange-{user.id}"
+
+
 def nc_req_callback(future: Future):
     try:
         res = future.result()
@@ -74,7 +78,7 @@ def user_joined_group_receiver_sub(sender, user, group, **kwargs):
         group.name,
     )
     submit_with_retry(
-        nextcloud.add_user_to_group, f"wechange-{user.id}", group.nextcloud_group_id
+        nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
     )
 
 
@@ -88,7 +92,7 @@ def user_left_group_receiver_sub(sender, user, group, **kwargs):
     )
     submit_with_retry(
         nextcloud.remove_user_from_group,
-        f"wechange-{user.id}",
+        get_nc_user_id(user),
         group.nextcloud_group_id,
     )
 
@@ -102,7 +106,7 @@ def userprofile_created_sub(sender, profile, **kwargs):
     )
     submit_with_retry(
         nextcloud.create_user,
-        f"wechange-{user.id}",
+        get_nc_user_id(user),
         full_name(user),
         user.email,
         [
@@ -112,10 +116,13 @@ def userprofile_created_sub(sender, profile, **kwargs):
     )
 
 
-@receiver(signals.group_object_created)
+@receiver(signals.group_object_ceated)
 def group_created_sub(sender, group, **kwargs):
 
-    group.nextcloud_group_id = f"wechange-{group.name}"
+    # For now, just use the group name, we might do something different in later versions
+    group.nextcloud_group_id = group.name
+
+    group.save(update_fields=["nextcloud_group_id"])
 
     logger.debug(
         "Creating new group [%s] in Nextcloud (wechange group name [%s])",
