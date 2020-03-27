@@ -1,12 +1,11 @@
-Developer Setup (WIP)
-=====================
+# Developer Setup (WIP)
 
 The setup is currently more complex that it needs to be, this will be improved later.
 
 You need:
 
-* Docker-Compose
-* an nginx installation (that will proxy the docker nginx that proxies another docker nginx...)
+- Docker-Compose
+- an nginx installation (that will proxy the docker nginx that proxies another docker nginx...)
 
 # Edit /etc/hosts
 
@@ -56,20 +55,20 @@ then restart nginx.
 
 cd to nextcloud-docker and execute
 
-$ docker-compose up db
+\$ docker-compose up db
 
 and then wait until you see "database system is ready to accept connections"; you can then press Ctrl-C to stop the container.
 This step ensures that the database will be available quickly once the app container starts (there seems to be a race condition that prevents nextcloud from initializing correctly if the database is not reachable). This step is only necessary once.
 
 Then do
 
-$ docker-compose up -d
+\$ docker-compose up -d
 
 you can also omit the `-d` if you want to see the log output without having to execute docker-compose logs
 
 # Update the config.php file in the container
 
-$ docker-compose logs -f app
+\$ docker-compose logs -f app
 
 Now wait until you see "Nextcloud was sucessfully installed"
 
@@ -92,7 +91,7 @@ press Ctrl+C
 then do (the docker-compose container must be running for this to work)
 
 $ docker-compose exec app su www-data -s /bin/sh -c './occ config:system:set overwritewebroot --value /nextcloud'
-$ docker-compose exec app su www-data -s /bin/sh -c 'for x in onlyoffice sociallogin; do ./occ app:install $x;done'
+$ docker-compose exec app su www-data -s /bin/sh -c 'for x in onlyoffice sociallogin groupfolders; do ./occ app:install \$x;done'
 
 You should now be able to visit http://wechange-dev/nextcloud and see the login screen
 
@@ -112,50 +111,45 @@ Go to http://wechange-dev/nextcloud/settings/admin/sociallogin (log in as "admin
 
 Activate "update user profile at login", and add a new Custom OAuth Server (not Custom OpenID Connect)
 
-* Internal name: wechange
-* Name: wechange
-* API-Base: http://wechange-dev/o
-* Authorize-URL: http://wechange-dev/o/authorize/  (contrary to what the UI claims, the url cannot be relative)
-* Token-URL: http://wechange-dev/o/token/   (mind the trailing slash)
-* Profile-URL: http://wechange-dev/group/forum/cloud/oauth2/
-* Logout-URL: (empty)
-* Client ID: foobar
-* Client Secret: barfoo
-* Scope: read
+- Internal name: wechange
+- Name: wechange
+- API-Base: http://wechange-dev/o
+- Authorize-URL: http://wechange-dev/o/authorize/ (contrary to what the UI claims, the url cannot be relative)
+- Token-URL: http://wechange-dev/o/token/ (mind the trailing slash)
+- Profile-URL: http://wechange-dev/group/forum/cloud/oauth2/
+- Logout-URL: (empty)
+- Client ID: foobar
+- Client Secret: barfoo
+- Scope: read
 
 Then save
 
 Go to http://wechange-dev/nextcloud/settings/admin/onlyoffice
 
-* Document Editing Service address: /nextcloud/oo/
-* Advanced Server Settings
-    * Document Editing Service address for internal requests from the server: http://onlyoffice/
-    * Server address for internal requests from the Document Editing Service: http://wechange-dev/nextcloud/
+- Document Editing Service address: /nextcloud/oo/
+- Advanced Server Settings
+  - Document Editing Service address for internal requests from the server: http://onlyoffice/
+  - Server address for internal requests from the Document Editing Service: http://wechange-dev/nextcloud/
 
-and save. 
+and save.
 
 Now go to http://wechange-dev/nextcloud/settings/users and add a new group named "wechange-Forum"
 
-
-Go to http://wechange-dev/nextcloud/apps/files/ and create a new folder in the root directory and name it "Groupfolders"
-
-
 # Add settings to settings.py
 
-* Add "wechange-dev" to ALLOWED_HOSTS
+- Add "wechange-dev" to ALLOWED_HOSTS
 
 Add
+
 ```
 COSINNUS_CLOUD_NEXTCLOUD_URL = "http://wechange-dev/nextcloud"
 COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME = "admin"
-COSINNUS_CLOUD_NEXTCLOUD_GROUPFOLDER_BASE = "Groupfolders"
 COSINNUS_CLOUD_NEXTCLOUD_AUTH = ("admin", "admin")
 ```
-
 
 Change domainname in http://localhost/admin/sites/site to wechange-dev
 
 # You're set
 
 You should be able to visit http://wechange-dev/group/forum/cloud and log in by clicking on "login with wechange". If you get an
-internal error that wechange-dev cannot be reached, the docker ip might have changed. Do `ip addr`  again and edit the "wechange-dev:172.x.x.x" entry in the docker-compose.yml file, then do `docker-compose restart`
+internal error that wechange-dev cannot be reached, the docker ip might have changed. Do `ip addr` again and edit the "wechange-dev:172.x.x.x" entry in the docker-compose.yml file, then do `docker-compose restart`

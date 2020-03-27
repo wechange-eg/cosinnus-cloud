@@ -145,24 +145,22 @@ def create_group(groupid: str) -> OCSResponse:
     )
 
 
-def create_group_folder(name: str) -> None:
-    path = f"/{settings.COSINNUS_CLOUD_NEXTCLOUD_GROUPFOLDER_BASE}/{name}"
-    response = requests.request(
-        "mkcol",
-        f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/remote.php/dav/files/{settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME}{path}",
-        auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+def create_group_folder(name: str, group_id:str) -> None:
+    response = _response_or_raise(
+        requests.post(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders",
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+            data={"mountpoint": name}
+        )
     )
-    if not response.ok:
-        # 405 Method not allowed means that the folder already exists, so we want to continue in that case
-        if response.status_code != 405:
-            logger.error("got error in DAV call %s", response.text)
-            response.raise_for_status()
+
+    folder_id = response.data["id"]
 
     return _response_or_raise(
         requests.post(
-            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/ocs/v2.php/apps/files_sharing/api/v1/shares",
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders/{folder_id}/groups",
             headers=HEADERS,
             auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
-            data={"path": path, "shareType": 1, "shareWith": name,},
+            data={"group": group_id},
         )
     )
