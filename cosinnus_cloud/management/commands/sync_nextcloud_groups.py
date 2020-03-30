@@ -36,6 +36,7 @@ class Command(BaseCommand):
             # TODO: only run the actual API calls for entries that are not yet set!
             
             portal_groups = get_cosinnus_group_model().objects.all_in_portal()
+            total_groups = len(portal_groups)
             for group in portal_groups:
                 current_group_created = False
                 counter += 1
@@ -87,9 +88,9 @@ class Command(BaseCommand):
                         errors += 1
                         self.stdout.write('Error (add user to group): Exception: ' + str(e))
                 
-                self.stdout.write(f"{counter} groups processed, {created} groups created, {folders_created} group folders created, {users_added} groups members added ({errors} Errors)", ending='\r')
+                self.stdout.write(f"{counter}/{total_groups} groups processed, {created} groups created, {folders_created} group folders created, {users_added} groups members added ({errors} Errors)", ending='\r')
                 self.stdout.flush()
-            self.stdout.write(f"Done! {counter} groups processed, {created} groups created, {folders_created} group folders created, {users_added} groups members added ({errors} Errors).")
+            self.stdout.write(f"Done! {counter}/{total_groups} groups processed, {created} groups created, {folders_created} group folders created, {users_added} groups members added ({errors} Errors).")
         except Exception as e:
             if settings.DEBUG:
                 raise

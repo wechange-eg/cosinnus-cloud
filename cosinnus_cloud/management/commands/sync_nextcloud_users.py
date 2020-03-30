@@ -30,6 +30,7 @@ class Command(BaseCommand):
             all_users = get_user_model().objects.filter(is_active=True)
             # TODO: search nextcloud for all exiting user IDs!
             non_existant_users = all_users
+            total_users = len(non_existant_users)
             for user in non_existant_users:
                 counter += 1
                 try:
@@ -44,9 +45,9 @@ class Command(BaseCommand):
                         raise
                     errors += 1
                     self.stdout.write('Error: Exception: ' + str(e))
-                self.stdout.write(f"{counter} users checked, {created} nextcloud users created ({errors} Errors)", ending='\r')
+                self.stdout.write(f"{counter}/{total_users} users checked, {created} nextcloud users created ({errors} Errors)", ending='\r')
                 self.stdout.flush()
-            self.stdout.write(f"Done! {counter} users checked, {created} nextcloud users created ({errors} Errors).")
+            self.stdout.write(f"Done! {counter}/{total_users} users checked, {created} nextcloud users created ({errors} Errors).")
         except Exception as e:
             if settings.DEBUG:
                 raise
