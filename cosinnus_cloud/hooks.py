@@ -14,6 +14,9 @@ from cosinnus.templatetags.cosinnus_tags import full_name
 from cosinnus.models.group import CosinnusGroup
 
 from .utils import nextcloud
+import re
+from cosinnus.utils.functions import unique_aware_slugify, is_number
+from cosinnus.utils.group import get_cosinnus_group_model
 
 logger = logging.getLogger("cosinnus")
 
@@ -118,20 +121,39 @@ def userprofile_created_sub(sender, profile, **kwargs):
 
 @receiver(signals.group_object_ceated)
 def group_created_sub(sender, group, **kwargs):
-
-    # For now, just use the group name, we might do something different in later versions
-    group.nextcloud_group_id = group.name
+    """ Create a unique file-system-valid id that is used for both the 
+        nextcloud group and group folder for this group. 
+        Remove leading and trailing spaces; leave other spaces intact and remove 
+        anything that is not an alphanumeric. """
+        
+    filtered_name = str(group.name).strip().replace(' ', '-----')
+    filtered_name = re.sub(r'(?u)[^\w-]', '', filtered_name)
+    filtered_name = filtered_name.replace('-----', ' ').strip()
+    if not filtered_name or is_number(filtered_name):
+        filtered_name = 'Folder' + filtered_name
+    # uniquify the id-name in case it clashes
+    all_names = get_cosinnus_group_model().objects.\
+             filter(nextcloud_group_id__istartswith=filtered_name).\
+             values_list('nextcloud_group_id', flat=True)
+    all_names = [name.lower() for name in all_names]
+    
+    counter = 2
+    unique_name = filtered_name
+    while unique_name.lower() in all_names:
+        unique_name = '%s %d' % (filtered_name, counter)
+        counter += 1
+    group.nextcloud_group_id = unique_name
 
     group.save(update_fields=["nextcloud_group_id"])
 
     logger.debug(
         "Creating new group [%s] in Nextcloud (wechange group name [%s])",
-        group.nextcloud_group_id,
-        group.name,
+        unique_name,
+        unique_name,
     )
 
-    submit_with_retry(nextcloud.create_group, group.nextcloud_group_id)
-    submit_with_retry(nextcloud.create_group_folder, group.name, group.nextcloud_group_id)
+    submit_with_retry(nextcloud.create_group, unique_name)
+    submit_with_retry(nextcloud.create_group_folder, unique_name, unique_name)
 
 
 # maybe listen to user_logged_in and user_logged_out too?
