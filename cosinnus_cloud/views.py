@@ -19,11 +19,24 @@ import urllib.parse
 logger = logging.getLogger("cosinnus")
 
 
+def get_nextcloud_group_folder_url(group):
+    """ Returns the direct link to a groupfolder in nextcloud for a given group """
+    if group.nextcloud_group_id:
+        nextcloud_group_id = group.nextcloud_group_id
+        relative_url = settings.COSINNUS_CLOUD_GROUP_FOLDER_IFRAME_URL % {
+            'group_folder_name': urllib.parse.quote(nextcloud_group_id),
+        }
+    else:
+        relative_url = ''
+    return settings.COSINNUS_CLOUD_NEXTCLOUD_URL + relative_url
+
+
 class CloudIndexView(RequireReadMixin, RedirectView):
     permanent = False
 
     def get_redirect_url(self, **kwargs):
-        return group_aware_reverse("cosinnus:cloud:stub", kwargs={"group": self.group})
+        #return group_aware_reverse("cosinnus:cloud:stub", kwargs={"group": self.group})
+        return get_nextcloud_group_folder_url(self.group)
 
 
 cloud_index_view = CloudIndexView.as_view()
@@ -35,15 +48,8 @@ class CloudStubView(RequireReadMixin, TemplateView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(CloudStubView, self).get_context_data(*args, **kwargs)
-        if self.group.nextcloud_group_id:
-            nextcloud_group_id = self.group.nextcloud_group_id
-            iframe_url = settings.COSINNUS_CLOUD_GROUP_FOLDER_IFRAME_URL % {
-                'group_folder_name': urllib.parse.quote(nextcloud_group_id),
-            }
-        else:
-            iframe_url = ''
         context.update({
-            "iframe_url": settings.COSINNUS_CLOUD_NEXTCLOUD_URL + iframe_url,
+            "iframe_url": get_nextcloud_group_folder_url(self.group),
         })
         return context
 
