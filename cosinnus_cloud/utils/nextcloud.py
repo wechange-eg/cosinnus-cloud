@@ -70,7 +70,11 @@ def _response_or_raise(requests_response: requests.Response):
             requests_response.text,
         )
         requests_response.raise_for_status()
-    response = OCSResponse(requests_response.json())
+    try:
+        response_json = requests_response.json()
+    except:
+        raise OCSException(-1, requests_response.text)
+    response = OCSResponse(response_json)
     if response.ok:
         return response
     else:

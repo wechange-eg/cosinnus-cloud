@@ -108,24 +108,33 @@ def userprofile_created_sub(sender, profile, **kwargs):
         "User profile created, adding user [%s] to nextcloud ", full_name(user)
     )
     submit_with_retry(
-        nextcloud.create_user,
+        create_user_from_obj,
+        user
+    )
+
+
+def create_user_from_obj(user):
+    """ Create a nextcloud user from a django auth User object """
+    return nextcloud.create_user(
         get_nc_user_id(user),
         full_name(user),
         user.email,
         [
             group.nextcloud_group_id
             for group in CosinnusGroup.objects.get_for_user(user)
-        ],
+        ]
     )
 
 
-@receiver(signals.group_object_ceated)
-def group_created_sub(sender, group, **kwargs):
-    """ Create a unique file-system-valid id that is used for both the 
+def generate_group_nextcloud_id(group):
+    """ If one doesn't yet exist, generates, saves and returns 
+        a unique file-system-valid id that is used for both the 
         nextcloud group and group folder for this group. 
         Remove leading and trailing spaces; leave other spaces intact and remove 
-        anything that is not an alphanumeric. """
-        
+        anything that is not an alphanumeric.  """
+    if group.nextcloud_group_id:
+        return group.nextcloud_group_id
+    
     filtered_name = str(group.name).strip().replace(' ', '-----')
     filtered_name = re.sub(r'(?u)[^\w-]', '', filtered_name)
     filtered_name = filtered_name.replace('-----', ' ').strip()
@@ -143,9 +152,13 @@ def group_created_sub(sender, group, **kwargs):
         unique_name = '%s %d' % (filtered_name, counter)
         counter += 1
     group.nextcloud_group_id = unique_name
-
     group.save(update_fields=["nextcloud_group_id"])
+    return group.nextcloud_group_id
 
+
+@receiver(signals.group_object_ceated)
+def group_created_sub(sender, group, **kwargs):
+    unique_name = generate_group_nextcloud_id(group)
     logger.debug(
         "Creating new group [%s] in Nextcloud (wechange group name [%s])",
         unique_name,
