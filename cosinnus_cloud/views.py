@@ -35,9 +35,13 @@ class CloudStubView(RequireReadMixin, TemplateView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(CloudStubView, self).get_context_data(*args, **kwargs)
-        iframe_url = settings.COSINNUS_CLOUD_GROUP_FOLDER_IFRAME_URL % {
-            'group_folder_name': urllib.parse.quote(self.group.nextcloud_group_id),
-        }
+        if self.group.nextcloud_group_id:
+            nextcloud_group_id = self.group.nextcloud_group_id
+            iframe_url = settings.COSINNUS_CLOUD_GROUP_FOLDER_IFRAME_URL % {
+                'group_folder_name': urllib.parse.quote(nextcloud_group_id),
+            }
+        else:
+            iframe_url = ''
         context.update({
             "iframe_url": settings.COSINNUS_CLOUD_NEXTCLOUD_URL + iframe_url,
         })
