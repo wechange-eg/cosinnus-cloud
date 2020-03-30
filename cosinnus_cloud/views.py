@@ -14,6 +14,8 @@ from cosinnus.views.mixins.group import RequireReadMixin
 from cosinnus.models.group import CosinnusGroup
 from cosinnus.conf import settings
 
+import urllib.parse
+
 logger = logging.getLogger("cosinnus")
 
 
@@ -28,16 +30,17 @@ cloud_index_view = CloudIndexView.as_view()
 
 
 class CloudStubView(RequireReadMixin, TemplateView):
-
+    
     template_name = "cosinnus_cloud/cloud_stub.html"
 
     def get_context_data(self, *args, **kwargs):
         context = super(CloudStubView, self).get_context_data(*args, **kwargs)
-        context.update(
-            {
-                "iframe_url": settings.COSINNUS_CLOUD_NEXTCLOUD_URL
-            }
-        )
+        iframe_url = settings.COSINNUS_CLOUD_GROUP_FOLDER_IFRAME_URL % {
+            'group_folder_name': urllib.parse.quote(self.group.nextcloud_group_id),
+        }
+        context.update({
+            "iframe_url": settings.COSINNUS_CLOUD_NEXTCLOUD_URL + iframe_url,
+        })
         return context
 
 

@@ -11,6 +11,8 @@ from django.dispatch import receiver
 def register():
     if "cosinnus_cloud" in getattr(settings, "COSINNUS_DISABLED_COSINNUS_APPS", []):
         return
+    if not getattr(settings, 'COSINNUS_CLOUD_ENABLED', False):
+        return
 
     # Import here to prevent import side effects
     from django.utils.translation import ugettext_lazy as _
