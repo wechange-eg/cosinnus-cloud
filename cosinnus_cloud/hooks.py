@@ -11,11 +11,10 @@ from django.dispatch.dispatcher import receiver
 from cosinnus.conf import settings
 from cosinnus.core import signals
 from cosinnus.templatetags.cosinnus_tags import full_name
-from cosinnus.models.group import CosinnusGroup
 
 from .utils import nextcloud
 import re
-from cosinnus.utils.functions import unique_aware_slugify, is_number
+from cosinnus.utils.functions import is_number
 from cosinnus.utils.group import get_cosinnus_group_model
 
 logger = logging.getLogger("cosinnus")
@@ -121,7 +120,7 @@ def create_user_from_obj(user):
         user.email,
         [
             group.nextcloud_group_id
-            for group in CosinnusGroup.objects.get_for_user(user)
+            for group in get_cosinnus_group_model().objects.get_for_user(user)
         ]
     )
 
@@ -138,8 +137,12 @@ def generate_group_nextcloud_id(group):
     filtered_name = str(group.name).strip().replace(' ', '-----')
     filtered_name = re.sub(r'(?u)[^\w-]', '', filtered_name)
     filtered_name = filtered_name.replace('-----', ' ').strip()
-    if not filtered_name or is_number(filtered_name):
+    if getattr(settings, 'COSINNUS_CLOUD_PREFIX_GROUP_FOLDERS', False):
+        filtered_name = '%s %s' % ('Gruppe' if group.type == get_cosinnus_group_model().TYPE_SOCIETY else 'Projekt', filtered_name)
+    elif not filtered_name or is_number(filtered_name):
         filtered_name = 'Folder' + filtered_name
+    filtered_name = filtered_name[:100] # max length 
+    
     # uniquify the id-name in case it clashes
     all_names = get_cosinnus_group_model().objects.\
              filter(nextcloud_group_id__istartswith=filtered_name).\
