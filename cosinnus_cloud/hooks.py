@@ -106,10 +106,7 @@ def userprofile_created_sub(sender, profile, **kwargs):
     logger.debug(
         "User profile created, adding user [%s] to nextcloud ", full_name(user)
     )
-    submit_with_retry(
-        create_user_from_obj,
-        user
-    )
+    submit_with_retry(create_user_from_obj, user)
 
 
 def create_user_from_obj(user):
@@ -121,7 +118,7 @@ def create_user_from_obj(user):
         [
             group.nextcloud_group_id
             for group in get_cosinnus_group_model().objects.get_for_user(user)
-        ]
+        ],
     )
 
 
@@ -133,27 +130,36 @@ def generate_group_nextcloud_id(group):
         anything that is not an alphanumeric.  """
     if group.nextcloud_group_id:
         return group.nextcloud_group_id
-    
-    filtered_name = str(group.name).strip().replace(' ', '-----')
-    filtered_name = re.sub(r'(?u)[^\w-]', '', filtered_name)
-    filtered_name = filtered_name.replace('-----', ' ').strip()
-    if getattr(settings, 'COSINNUS_CLOUD_PREFIX_GROUP_FOLDERS', False):
-        filtered_name = '%s %s' % ('Gruppe' if group.type == get_cosinnus_group_model().TYPE_SOCIETY else 'Projekt', filtered_name)
+
+    filtered_name = str(group.name).strip().replace(" ", "-----")
+    filtered_name = re.sub(r"(?u)[^\w-]", "", filtered_name)
+    filtered_name = filtered_name.replace("-----", " ").strip()
+    if getattr(settings, "COSINNUS_CLOUD_PREFIX_GROUP_FOLDERS", False):
+        filtered_name = "%s %s" % (
+            "Gruppe"
+            if group.type == get_cosinnus_group_model().TYPE_SOCIETY
+            else "Projekt",
+            filtered_name,
+        )
     elif not filtered_name or is_number(filtered_name):
-        filtered_name = 'Folder' + filtered_name
-    filtered_name = filtered_name[:100] # max length 
-    
+        filtered_name = "Folder" + filtered_name
+    filtered_name = filtered_name[:100]  # max length
+
     # uniquify the id-name in case it clashes
-    all_names = get_cosinnus_group_model().objects.\
-             filter(nextcloud_group_id__istartswith=filtered_name).\
-             values_list('nextcloud_group_id', flat=True)
+    all_names = (
+        get_cosinnus_group_model()
+        .objects.filter(nextcloud_group_id__istartswith=filtered_name)
+        .values_list("nextcloud_group_id", flat=True)
+    )
     all_names = [name.lower() for name in all_names]
-    all_names += ['admin'] # the admin group is a protected system group, so never assign it!
-    
+    all_names += [
+        "admin"
+    ]  # the admin group is a protected system group, so never assign it!
+
     counter = 2
     unique_name = filtered_name
     while unique_name.lower() in all_names:
-        unique_name = '%s %d' % (filtered_name, counter)
+        unique_name = "%s %d" % (filtered_name, counter)
         counter += 1
     group.nextcloud_group_id = unique_name
     group.save(update_fields=["nextcloud_group_id"])

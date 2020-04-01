@@ -24,10 +24,10 @@ def get_nextcloud_group_folder_url(group):
     if group.nextcloud_group_id:
         nextcloud_group_id = group.nextcloud_group_id
         relative_url = settings.COSINNUS_CLOUD_GROUP_FOLDER_IFRAME_URL % {
-            'group_folder_name': urllib.parse.quote(nextcloud_group_id),
+            "group_folder_name": urllib.parse.quote(nextcloud_group_id),
         }
     else:
-        relative_url = ''
+        relative_url = ""
     return settings.COSINNUS_CLOUD_NEXTCLOUD_URL + relative_url
 
 
@@ -35,7 +35,7 @@ class CloudIndexView(RequireReadMixin, RedirectView):
     permanent = False
 
     def get_redirect_url(self, **kwargs):
-        #return group_aware_reverse("cosinnus:cloud:stub", kwargs={"group": self.group})
+        # return group_aware_reverse("cosinnus:cloud:stub", kwargs={"group": self.group})
         return get_nextcloud_group_folder_url(self.group)
 
 
@@ -43,14 +43,14 @@ cloud_index_view = CloudIndexView.as_view()
 
 
 class CloudStubView(RequireReadMixin, TemplateView):
-    
+
     template_name = "cosinnus_cloud/cloud_stub.html"
 
     def get_context_data(self, *args, **kwargs):
         context = super(CloudStubView, self).get_context_data(*args, **kwargs)
-        context.update({
-            "iframe_url": get_nextcloud_group_folder_url(self.group),
-        })
+        context.update(
+            {"iframe_url": get_nextcloud_group_folder_url(self.group),}
+        )
         return context
 
 

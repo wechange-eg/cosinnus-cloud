@@ -149,13 +149,13 @@ def create_group(groupid: str) -> OCSResponse:
     )
 
 
-def create_group_folder(name: str, group_id:str) -> None:
+def create_group_folder(name: str, group_id: str) -> None:
     response = _response_or_raise(
         requests.post(
             f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders",
             headers=HEADERS,
             auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
-            data={"mountpoint": name}
+            data={"mountpoint": name},
         )
     )
 
