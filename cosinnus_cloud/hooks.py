@@ -176,7 +176,12 @@ def group_created_sub(sender, group, **kwargs):
     )
 
     submit_with_retry(nextcloud.create_group, unique_name)
-    submit_with_retry(nextcloud.create_group_folder, unique_name, unique_name)
+    submit_with_retry(
+        nextcloud.create_group_folder,
+        unique_name,
+        unique_name,
+        raise_on_existing_name=False,
+    )
 
 
 # maybe listen to user_logged_in and user_logged_out too?
