@@ -148,6 +148,7 @@ def generate_group_nextcloud_id(group):
              filter(nextcloud_group_id__istartswith=filtered_name).\
              values_list('nextcloud_group_id', flat=True)
     all_names = [name.lower() for name in all_names]
+    all_names += ['admin'] # the admin group is a protected system group, so never assign it!
     
     counter = 2
     unique_name = filtered_name
