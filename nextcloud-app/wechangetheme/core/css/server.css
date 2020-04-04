@@ -1,0 +1,37 @@
+
+
+/* use logos from theme */
+#header .logo,
+#firstrunwizard .logo {
+	background-image: url('../img/logo.svg');
+}
+#header .logo-icon {
+    background-image: url('../img/logo-icon.png');
+    width: 80px;
+}
+#header .logo-icon-plattform {
+    background-image: url('../img/logo-icon-plattform.png');
+    margin: 5px 0;
+    width: 38px;
+}
+
+#nextcloud {
+    padding-left: 110px;
+}
+#nextcloud-plattform {
+    /* From #nextcloud */
+    padding: 7px 0;
+    padding-left: 86px;
+    position: relative;
+    height: 100%;
+    box-sizing: border-box;
+    opacity: 1;
+    align-items: center;
+    flex-wrap: wrap;
+    overflow: hidden;
+    
+    /* our overwrites */
+    background-color: #01649a;
+    padding-left: 64px;
+}
+
