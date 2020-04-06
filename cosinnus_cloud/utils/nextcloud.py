@@ -159,7 +159,7 @@ def create_group_folder(name: str, group_id: str, raise_on_existing_name=True) -
         )
     )
 
-    if any(folder.mount_point == name for folder in response.data.values()):
+    if any(folder['mount_point'] == name for folder in response.data.values()):
         if raise_on_duplicate_name:
             raise ValueError("A groupfolder with that name already exists")
         else:
