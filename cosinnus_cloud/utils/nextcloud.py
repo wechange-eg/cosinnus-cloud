@@ -139,14 +139,21 @@ def remove_user_from_group(userid: str, groupid: str) -> OCSResponse:
 
 
 def create_group(groupid: str) -> OCSResponse:
-    return _response_or_raise(
-        requests.post(
-            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/ocs/v1.php/cloud/groups",
-            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
-            headers=HEADERS,
-            data={"groupid": groupid},
+    try:
+        return _response_or_raise(
+            requests.post(
+                f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/ocs/v1.php/cloud/groups",
+                auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+                headers=HEADERS,
+                data={"groupid": groupid},
+            )
         )
-    )
+    except OCSException as e:
+        if e.statuscode == 102:
+            logger.warning("group [%s] already exists, doing nothing", groupid)
+            return None
+        raise
+        
 
 
 def create_group_folder(name: str, group_id: str, raise_on_existing_name=True) -> None:

@@ -20,7 +20,7 @@ def register():
 
     from cosinnus.core.registries import app_registry, url_registry
 
-    app_registry.register("cosinnus_cloud", "cloud", _("Cloud"), deactivatable=True)
+    app_registry.register("cosinnus_cloud", "cloud", _("Cloud"), deactivatable=True, active_by_default=False)
     url_registry.register_urlconf("cosinnus_cloud", "cosinnus_cloud.urls")
 
     # makemessages replacement protection

@@ -74,14 +74,16 @@ def nc_req_callback(future: Future):
 @receiver(signals.user_joined_group)
 def user_joined_group_receiver_sub(sender, user, group, **kwargs):
     """ Triggers when a user properly joined (not only requested to join) a group """
-    logger.debug(
-        "User [%s] joined group [%s], adding him/her to Nextcloud",
-        full_name(user),
-        group.name,
-    )
-    submit_with_retry(
-        nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
-    )
+    # only initialize if the cosinnus-app is actually activated
+    if 'cosinnus_cloud' not in group.get_deactivated_apps():
+        logger.debug(
+            "User [%s] joined group [%s], adding him/her to Nextcloud",
+            full_name(user),
+            group.name,
+        )
+        submit_with_retry(
+            nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
+        )
 
 
 @receiver(signals.user_left_group)
@@ -168,6 +170,34 @@ def generate_group_nextcloud_id(group):
 
 @receiver(signals.group_object_ceated)
 def group_created_sub(sender, group, **kwargs):
+    # only initialize if the cosinnus-app is actually activated
+    if 'cosinnus_cloud' not in group.get_deactivated_apps():
+        initialize_nextcloud_for_group(group)
+    
+    
+@receiver(signals.group_apps_activated)
+def group_cloud_app_activated_sub(sender, group, apps, **kwargs):
+    """ Listen for the cloud app being activated """
+    if 'cosinnus_cloud' in apps:
+        # TODO: make sure this is safe:
+        # A) YES! for repeated deactivation/activation 
+        # B) YES! if the group hadn't been activated yet, and everything is created
+        # C) TODO! the app had been activated before, but then, while it was deactivated, new members joined
+        #        and then it got re-activated, and the members have to be added to the nextcloud-group
+        initialize_nextcloud_for_group(group)
+        for user in group.actual_members:
+            submit_with_retry(
+                nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
+            )
+            # TODO: remove users who have left the group while the app was deactivated!
+
+@receiver(signals.group_apps_deactivated)
+def group_cloud_app_deactivated_sub(sender, group, apps, **kwargs):
+    #logger.warn('DEact apps: %s' % str(apps))
+    pass
+    
+    
+def initialize_nextcloud_for_group(group):
     unique_name = generate_group_nextcloud_id(group)
     logger.debug(
         "Creating new group [%s] in Nextcloud (wechange group name [%s])",
@@ -190,19 +220,20 @@ def group_created_sub(sender, group, **kwargs):
 
 @receiver(signals.user_deactivated)
 def user_deactivated(sender, user, **kwargs):
-    logger.warning("User %s was deactivated" % user.username)
-
+    #logger.warning("User %s was deactivated" % user.username)
+    pass
 
 @receiver(signals.user_activated)
 def user_activated(sender, user, **kwargs):
-    logger.warning("User %s was activated" % user.username)
-
+    #logger.warning("User %s was activated" % user.username)
+    pass
 
 @receiver(signals.group_deactivated)
 def group_deactivated(sender, group, **kwargs):
-    logger.warning('Group "%s" was deactivated' % group.slug)
-
+    #logger.warning('Group "%s" was deactivated' % group.slug)
+    pass
 
 @receiver(signals.group_reactivated)
 def group_reactivated(sender, group, **kwargs):
-    logger.warning('Group "%s" was reactivated' % group.slug)
+    #logger.warning('Group "%s" was reactivated' % group.slug)
+    pass
