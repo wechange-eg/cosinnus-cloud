@@ -76,29 +76,34 @@ def user_joined_group_receiver_sub(sender, user, group, **kwargs):
     """ Triggers when a user properly joined (not only requested to join) a group """
     # only initialize if the cosinnus-app is actually activated
     if 'cosinnus_cloud' not in group.get_deactivated_apps():
-        logger.debug(
-            "User [%s] joined group [%s], adding him/her to Nextcloud",
-            full_name(user),
-            group.name,
-        )
-        submit_with_retry(
-            nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
-        )
+        if group.nextcloud_group_id is not None:
+            logger.debug(
+                "User [%s] joined group [%s], adding him/her to Nextcloud",
+                full_name(user),
+                group.name,
+            )
+            submit_with_retry(
+                nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
+            )
 
 
 @receiver(signals.user_left_group)
 def user_left_group_receiver_sub(sender, user, group, **kwargs):
-    """ Triggers when a user left a group """
-    logger.debug(
-        "User [%s] left group [%s], removing him from Nextcloud",
-        full_name(user),
-        group.name,
-    )
-    submit_with_retry(
-        nextcloud.remove_user_from_group,
-        get_nc_user_id(user),
-        group.nextcloud_group_id,
-    )
+    """ Triggers when a user left a group.  
+        Note: this can trigger on groups that do not have the cloud app activated, 
+              so that it removes users properly while the app is just disabled for 
+              a short period of time. """
+    if group.nextcloud_group_id is not None:
+        logger.debug(
+            "User [%s] left group [%s], removing him from Nextcloud",
+            full_name(user),
+            group.name,
+        )
+        submit_with_retry(
+            nextcloud.remove_user_from_group,
+            get_nc_user_id(user),
+            group.nextcloud_group_id,
+        )
 
 
 # TODO: replace with _created once core PR#23 is merged
