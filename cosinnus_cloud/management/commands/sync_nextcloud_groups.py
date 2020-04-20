@@ -45,6 +45,10 @@ class Command(BaseCommand):
             portal_groups = get_cosinnus_group_model().objects.all_in_portal()
             total_groups = len(portal_groups)
             for group in portal_groups:
+                # only run this for groups that have the cloud app activated
+                if 'cosinnus_cloud' in group.get_deactivated_apps():
+                    continue
+                
                 current_group_created = False
                 counter += 1
                 if not group.nextcloud_group_id:
@@ -73,7 +77,7 @@ class Command(BaseCommand):
                     # create group folder
                     try:
                         nextcloud.create_group_folder(
-                            group.nextcloud_group_id, group.nextcloud_group_id
+                            group.nextcloud_group_id, group.nextcloud_group_id, raise_on_existing_name=False,
                         )
                         folders_created += 1
                     except OCSException as e:
