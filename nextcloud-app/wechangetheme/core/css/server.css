@@ -3,17 +3,28 @@
 /* use logos from theme */
 #header .logo,
 #firstrunwizard .logo {
-	background-image: url('../img/logo.svg');
+	background-image: url('../img/logo.png');
 }
 #header .logo-icon {
-    background-image: url('../img/logo-icon.png');
+    background-image: url('../img/logo-icon.png') !important;
     width: 80px;
 }
 #header .logo-icon-plattform {
-    background-image: url('../img/logo-icon-plattform.png');
+    background-image: url('../img/logo-icon-plattform.png') !important; 
     margin: 5px 0;
     width: 38px;
 }
+#firstrunwizard .page .content {
+    padding: 40px !important;
+}
+#firstrunwizard .page .wizard-warning {
+    border: 2px solid #01649a;
+    padding: 40px 80px;
+    text-align: center;
+}
+#firstrunwizard .page .wizard-warning h1 {
+}
+
 
 #nextcloud {
     padding-left: 110px;

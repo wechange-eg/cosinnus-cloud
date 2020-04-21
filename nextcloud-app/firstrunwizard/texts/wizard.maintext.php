@@ -1,0 +1,1 @@
+Die WE Cloud bietet deinem Team eine flexible Dateiablage mit umfangreichen Office-Funktionen um gemeinsam an Dokumenten, Tabellen und Präsentationen zu arbeiten. Sie basiert auf Nextcloud und OnlyOffice. So stehen dir zwei Apps zur Verfügung mit denen du die Cloud auch von Unterwegs nutzen und Dateien mit deinem Desktop-Computer synchronisieren kannst.
