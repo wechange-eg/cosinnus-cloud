@@ -1,0 +1,28 @@
+{% load cosinnus_tags %}
+
+{% for cloud_file in cloud_files %}
+	<div class="app-cloud">
+        <div class="btn btn-emphasized w100 {% if not no_indent %}indented"{% endif %} href="{{ cloud_file.url }}">
+            <ul class="media-list fine-space">
+                <li class="media">
+                    <a class="pull-left" href="#">
+                        <i class="fa {% if cloud_file.type == 1 %}fa-table{% else %}fa-file-text{% endif %}"></i>
+                    </a>
+                    <div class="media-body no-vertical-padding ">
+                        <strong>
+                            <a href="{{ cloud_file.url }}">
+	                            {{ cloud_file.title|truncatechars:25 }}
+	                        </a>
+                        </strong>
+                        {% with creator=etherpad.creator %}
+                            <div class="group-annotation">
+                                <i class="fa fa-question"></i>
+                                (Maybe type, or size?)
+                            </div>
+                        {% endwith %}
+                    </div>
+                </li>
+            </ul>
+        </div><!-- btn -->
+	</div>
+{% endfor %}
