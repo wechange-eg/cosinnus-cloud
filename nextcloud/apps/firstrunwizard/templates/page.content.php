@@ -34,13 +34,14 @@
             <?php print_unescaped($this->inc('texts/wizard.maintext')); ?>
         </p>
         <p>
-            <a href="<?php p($theme->getBaseUrl()); ?>" target="_blank" rel="noreferrer noopener">
+            <a href="/todo/cms-cloud-link/" target="_blank" rel="noreferrer noopener">
                 <?php print_unescaped($this->inc('texts/wizard.learnmore')); ?>
             </a>
         </p>
+        <br/>
         
         <div class="wizard-warning">
-            <h1>XX<?php print_unescaped($this->inc('texts/wizard.warning.header')); ?></h1>
+            <h2><?php print_unescaped($this->inc('texts/wizard.warning.header')); ?></h2>
             <p>
                 <?php print_unescaped($this->inc('texts/wizard.warning.text')); ?>
             </p>

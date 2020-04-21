@@ -82,7 +82,8 @@ class WizardController extends Controller {
 			'useTLS'       => $this->request->getServerProtocol() === 'https',
 			'macOSProfile' => \OCP\Util::linkToRemote('dav') . 'provisioning/apple-provisioning.mobileconfig',
 		];
-
+        
+        /* Wechange overwrite */
 		$slides = [
 			$this->staticSlide('page.content', $data)
 		];
