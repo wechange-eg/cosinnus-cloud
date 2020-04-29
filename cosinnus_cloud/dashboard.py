@@ -10,6 +10,8 @@ from cosinnus.utils.dashboard import DashboardWidget, DashboardWidgetForm
 from cosinnus.models.widget import WidgetConfig
 from cosinnus.utils.urls import group_aware_reverse
 from cosinnus_cloud.models import CloudFile
+from cosinnus_cloud.utils import nextcloud
+from cosinnus.conf import settings
 
 
 class LatestCloudFilesForm(DashboardWidgetForm):
@@ -32,15 +34,26 @@ class Latest(DashboardWidget):
          """
         count = int(self.config['amount'])
         
-        # TODO: get data from nextcloud
-        newest_group_files = [CloudFile('File aa'), CloudFile('File b')]
-        
-        
-        if count != 0:
-            newest_group_files = newest_group_files[offset:offset+count]
+        rows = []
+        if self.config.group.nextcloud_group_id:
+            # get nextcloud file infos for this group folder
+            newest_group_files = nextcloud.list_group_folder_files(self.config.group.nextcloud_group_id)
+            # paginate list
+            if count != 0:
+                newest_group_files = newest_group_files[offset:offset+count]
+            # wrap in CloudFile object for template
+            for filename, folder_name, file_id, url in newest_group_files:
+                rows.append(CloudFile(
+                    title=filename,
+                    url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/f/{file_id}",
+                    download_url=url,
+                    type=None,
+                    folder=folder_name,
+                    user=self.request.user
+                ))
             
         data = {
-            'rows': newest_group_files,
+            'rows': rows,
             'no_data': _('No cloud files yet'),
             'group': self.config.group,
         }

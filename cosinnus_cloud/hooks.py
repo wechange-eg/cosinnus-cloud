@@ -184,17 +184,13 @@ def group_created_sub(sender, group, **kwargs):
 def group_cloud_app_activated_sub(sender, group, apps, **kwargs):
     """ Listen for the cloud app being activated """
     if 'cosinnus_cloud' in apps:
-        # TODO: make sure this is safe:
-        # A) YES! for repeated deactivation/activation 
-        # B) YES! if the group hadn't been activated yet, and everything is created
-        # C) TODO! the app had been activated before, but then, while it was deactivated, new members joined
-        #        and then it got re-activated, and the members have to be added to the nextcloud-group
         initialize_nextcloud_for_group(group)
         for user in group.actual_members:
             submit_with_retry(
                 nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
             )
-            # TODO: remove users who have left the group while the app was deactivated!
+            # we don't need to remove users who have left the group while the app was deactivated here,
+            # because that listener is always active
 
 @receiver(signals.group_apps_deactivated)
 def group_cloud_app_deactivated_sub(sender, group, apps, **kwargs):
@@ -210,12 +206,18 @@ def initialize_nextcloud_for_group(group):
         unique_name,
     )
 
+    # create nextcloud group
     submit_with_retry(nextcloud.create_group, unique_name)
+    # create nextcloud group folder
     submit_with_retry(
         nextcloud.create_group_folder,
         unique_name,
         unique_name,
         raise_on_existing_name=False,
+    )
+    # add admin user to group
+    submit_with_retry(
+        nextcloud.add_user_to_group, settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH[0], group.nextcloud_group_id
     )
 
 

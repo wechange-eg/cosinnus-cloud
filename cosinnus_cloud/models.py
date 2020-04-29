@@ -1,14 +1,29 @@
 # -*- coding: utf-8 -*-
 
+from cosinnus.conf import settings
+
 class CloudFile(object):
     """ A wrapper object for API-retrieved nextcloud file infos """
     
     # uses the internal id to redirect https://<cloud-root>/f/1085
     title = None # str
-    url = None 
+    url = None
+    download_url = None
     type = None # ??? 
+    folder = None
     
-    def __init__(self, title=None, url=None, type=None):
+    def __init__(self, title=None, url=None, download_url=None, type=None, folder=None, user=None):
+        """ Supply a `user` to make download links work for users! """
         self.title = title
         self.url = url
         self.type = type
+        self.folder = folder
+        if user:
+            from cosinnus_cloud.hooks import get_nc_user_id
+            self.download_url = download_url.replace(
+                settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME,
+                get_nc_user_id(user),
+                1
+            )
+        else:
+            self.download_url = download_url

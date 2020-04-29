@@ -94,10 +94,13 @@ class Command(BaseCommand):
                         )
 
                 # add members to group
-                for member in group.actual_members:
+                nextcloud_user_ids = [get_nc_user_id(member) for member in group.actual_members]
+                # always add admin to groups
+                nextcloud_user_ids.append(settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH[0]) 
+                for nc_uid in nextcloud_user_ids:
                     try:
                         nextcloud.add_user_to_group(
-                            get_nc_user_id(member), group.nextcloud_group_id
+                            nc_uid, group.nextcloud_group_id
                         )
                         users_added += 1
                     except OCSException as e:
@@ -115,9 +118,7 @@ class Command(BaseCommand):
 
                 self.stdout.write(
                     f"{counter}/{total_groups} groups processed, {created} groups created, {folders_created} group folders created, {users_added} groups members added ({errors} Errors)",
-                    ending="\r",
                 )
-                self.stdout.flush()
             self.stdout.write(
                 f"Done! {counter}/{total_groups} groups processed, {created} groups created, {folders_created} group folders created, {users_added} groups members added ({errors} Errors)."
             )

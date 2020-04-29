@@ -8,6 +8,9 @@ from typing import Mapping, Sequence
 
 import requests
 from cosinnus.conf import settings
+from cosinnus.models.group import CosinnusPortal
+from bs4 import BeautifulSoup
+import urllib
 
 logger = logging.getLogger("cosinnus")
 
@@ -60,6 +63,7 @@ class OCSException(RuntimeError):
 
 
 HEADERS = {"OCS-APIRequest": "true", "Accept": "application/json"}
+WEBDAV_HEADERS = {"Content-Type": "text/xml"}
 
 
 def _response_or_raise(requests_response: requests.Response):
@@ -79,6 +83,16 @@ def _response_or_raise(requests_response: requests.Response):
         return response
     else:
         raise OCSException(response.statuscode, response.message)
+    
+def _webdav_response_or_raise(requests_response: requests.Response):
+    if not requests_response.ok:
+        logger.error(
+            "Got Webdav HTTP result %s from nextcloud, text: %s",
+            requests_response,
+            requests_response.text,
+        )
+        requests_response.raise_for_status()
+    return requests_response.text
 
 
 def create_user(
@@ -191,3 +205,86 @@ def create_group_folder(name: str, group_id: str, raise_on_existing_name=True) -
             data={"group": group_id},
         )
     )
+    
+    
+def group_folder_files_search(groupfolder_id, timeout=5):
+    """ Webdav request that lists all files in order by last modified date """
+    url = f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/remote.php/dav/"
+    body = f"""<?xml version="1.0" encoding="UTF-8"?>
+        <d:searchrequest xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
+            <d:basicsearch>
+                <d:select>
+                    <d:prop>
+                        <d:displayname/>
+                        <oc:fileid/>
+                    </d:prop>
+                </d:select>
+                <d:from>
+                    <d:scope>
+                        <d:href>/files/{settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH[0]}/{groupfolder_id}/</d:href>
+                        <d:depth>infinity</d:depth>
+                    </d:scope>
+                </d:from>
+                <d:where>
+                    <d:gte>
+                        <d:prop>
+                            <oc:size/>
+                        </d:prop>
+                        <d:literal>0</d:literal>
+                    </d:gte>
+                </d:where>
+                <d:orderby>
+                    <d:prop>
+                        <oc:getlastmodified/>
+                    </d:prop>
+                    <d:descending/>
+                </d:orderby>
+            </d:basicsearch>
+        </d:searchrequest>
+    """
+    return _webdav_response_or_raise(
+        requests.request(
+            method='SEARCH',
+            url=url,
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+            headers=WEBDAV_HEADERS,
+            timeout=timeout,
+            data=body,
+        )
+    )
+
+def list_group_folder_files(groupfolder_id):
+    """ Returns a tupled list of [filename, folder-name, file-id, download-url] to """
+    try:
+        response_text = group_folder_files_search(groupfolder_id)
+    except Exception as e:
+        return []
+    
+    soup = BeautifulSoup(response_text)
+    content = soup.find('d:multistatus')
+    if not content:
+        return []
+    
+    file_list = []
+    domain = CosinnusPortal.get_current().get_domain()
+    
+    all_responses = content.find_all('d:response') 
+    # since nextcloud seemingly ignores the last-modified sorting, reverse the list,
+    # at least then it is sorted by IDs (last created)
+    all_responses = reversed(all_responses)
+    for search_result in all_responses:
+        filepath = search_result.find('d:href').get_text()
+        if filepath:
+            if filepath.endswith('/'):
+                continue # result is a folder
+            splits = filepath.split('/')
+            id_pointer = search_result.find('oc:fileid')
+            file_id = id_pointer and id_pointer.get_text() or None
+            file_list.append([
+                urllib.parse.unquote(splits[-1]),
+                urllib.parse.unquote(splits[-2]), 
+                file_id, 
+                domain + filepath
+            ])
+    return file_list
+        
