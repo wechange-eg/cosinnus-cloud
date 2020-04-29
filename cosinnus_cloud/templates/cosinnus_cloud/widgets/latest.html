@@ -17,3 +17,10 @@
 	</div><!-- btn -->
 {% endif %}
 
+{% if total_count %}
+    {% comment %} Monkeypatch in the received total count for the cloud files in project dashboard links header {% endcomment %}
+    <script type="text/javascript">
+        $('.dashboard-header-link.app-cloud span').text("{{ total_count }}");
+    </script>
+{% endif %}
+

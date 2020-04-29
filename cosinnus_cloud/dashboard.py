@@ -38,6 +38,7 @@ class Latest(DashboardWidget):
         if self.config.group.nextcloud_group_id:
             # get nextcloud file infos for this group folder
             newest_group_files = nextcloud.list_group_folder_files(self.config.group.nextcloud_group_id)
+            total_count = len(newest_group_files)
             # paginate list
             if count != 0:
                 newest_group_files = newest_group_files[offset:offset+count]
@@ -56,6 +57,7 @@ class Latest(DashboardWidget):
             'rows': rows,
             'no_data': _('No cloud files yet'),
             'group': self.config.group,
+            'total_count': total_count,
         }
         return (render_to_string('cosinnus_cloud/widgets/latest.html', data), len(newest_group_files), len(newest_group_files) >= count)
     
