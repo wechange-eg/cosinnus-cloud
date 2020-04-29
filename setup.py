@@ -54,6 +54,7 @@ setup(
     install_requires=[
         'cosinnus>=0.4.2.dev0',
         'requests>=2.20.0',
+        'lxml>=4.5.0'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

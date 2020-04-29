@@ -221,7 +221,7 @@ def group_folder_files_search(groupfolder_id, timeout=5):
                 </d:select>
                 <d:from>
                     <d:scope>
-                        <d:href>/files/{settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH[0]}/{groupfolder_id}/</d:href>
+                        <d:href>/files/{settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME}/{groupfolder_id}/</d:href>
                         <d:depth>infinity</d:depth>
                     </d:scope>
                 </d:from>
@@ -260,7 +260,7 @@ def list_group_folder_files(groupfolder_id):
     except Exception as e:
         return []
     
-    soup = BeautifulSoup(response_text)
+    soup = BeautifulSoup(response_text, 'xml')
     content = soup.find('d:multistatus')
     if not content:
         return []

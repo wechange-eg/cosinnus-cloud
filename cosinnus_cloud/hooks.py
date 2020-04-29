@@ -217,7 +217,7 @@ def initialize_nextcloud_for_group(group):
     )
     # add admin user to group
     submit_with_retry(
-        nextcloud.add_user_to_group, settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH[0], group.nextcloud_group_id
+        nextcloud.add_user_to_group, settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME, group.nextcloud_group_id
     )
 
 

@@ -96,7 +96,7 @@ class Command(BaseCommand):
                 # add members to group
                 nextcloud_user_ids = [get_nc_user_id(member) for member in group.actual_members]
                 # always add admin to groups
-                nextcloud_user_ids.append(settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH[0]) 
+                nextcloud_user_ids.append(settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME) 
                 for nc_uid in nextcloud_user_ids:
                     try:
                         nextcloud.add_user_to_group(
