@@ -44,9 +44,89 @@
     align-items: center;
     flex-wrap: wrap;
     overflow: hidden;
-    
+
     /* our overwrites */
-    background-color: #01649a;
-    padding-left: 64px;
+    background-color: #0077a4;
+    padding-left:50px;
 }
 
+#body-user #header,
+#body-settings #header,
+#body-public #header {
+ background-image:linear-gradient(40deg, #0077a4 20%, #258ec9 100%);
+}
+
+#header .logo-icon-plattform {
+    margin: 6px 0;
+}
+
+div.select2-drop .select2-search input:not(:disabled):not(.primary),
+select:not(:disabled):not(.primary),
+button:not(:disabled):not(.primary),
+.button:not(:disabled):not(.primary),
+input:not([type='range']):not(:disabled):not(.primary),
+textarea:not(:disabled):not(.primary),
+div[contenteditable=true]:not(:disabled):not(.primary),
+.pager li a:not(:disabled):not(.primary) {
+}
+div.select2-drop .select2-search input:not(:disabled):not(.primary):hover,
+select:not(:disabled):not(.primary):hover,
+button:not(:disabled):not(.primary):hover,
+.button:not(:disabled):not(.primary):hover,
+input:not([type='range']):not(:disabled):not(.primary):hover,
+textarea:not(:disabled):not(.primary):hover,
+div[contenteditable=true]:not(:disabled):not(.primary):hover,
+.pager li a:not(:disabled):not(.primary):hover,
+div.select2-drop .select2-search input:not(:disabled):not(.primary):focus,
+select:not(:disabled):not(.primary):focus,
+button:not(:disabled):not(.primary):focus,
+.button:not(:disabled):not(.primary):focus,
+input:not([type='range']):not(:disabled):not(.primary):focus,
+textarea:not(:disabled):not(.primary):focus,
+div[contenteditable=true]:not(:disabled):not(.primary):focus,
+.pager li a:not(:disabled):not(.primary):focus,
+div.select2-drop .select2-search input:not(:disabled):not(.primary).active,
+select:not(:disabled):not(.primary).active,
+button:not(:disabled):not(.primary).active,
+.button:not(:disabled):not(.primary).active,
+input:not([type='range']):not(:disabled):not(.primary).active,
+textarea:not(:disabled):not(.primary).active,
+div[contenteditable=true]:not(:disabled):not(.primary).active,
+.pager li a:not(:disabled):not(.primary).active {
+ border-color:#4a4a4a;
+ outline:none
+}
+
+
+@font-face {
+    font-family: 'Brandon Grotesque';
+    font-style: normal;
+    font-weight: normal;
+    src: url('./../css/fonts/brandon/brandongrotesque.otf');
+}
+@font-face {
+    font-family: 'Brandon Text';
+    font-style: normal;
+    font-weight: normal;
+    src: url('./../css/fonts/brandon/brandon-text-regular.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'Brandon Text';
+    font-style: italic;
+    font-weight: normal;
+    src: url('./../css/fonts/brandon/brandon-text-italic.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'Brandon Text';
+    font-style: normal;
+    font-weight: bold;
+    src: url('./../css/fonts/brandon/brandon-text-bold.ttf') format('truetype');
+}
+
+body {
+    font-family: 'Brandon Text', -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;;
+}
+
+#contactsmenu {
+    display: none;
+}
