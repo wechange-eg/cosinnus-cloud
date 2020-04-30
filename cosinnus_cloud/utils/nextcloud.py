@@ -119,6 +119,23 @@ def create_user(
     )
     return _response_or_raise(res)
 
+def disable_user(userid: str) -> OCSResponse:
+    return _response_or_raise(
+        requests.put(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/ocs/v1.php/cloud/users/{quote(userid)}/disable",
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+            headers=HEADERS,
+        )
+    )
+    
+def enable_user(userid: str) -> OCSResponse:
+    return _response_or_raise(
+        requests.put(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/ocs/v1.php/cloud/users/{quote(userid)}/enable",
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+            headers=HEADERS,
+        )
+    )
 
 def delete_user(userid: str) -> OCSResponse:
     return _response_or_raise(

@@ -227,13 +227,17 @@ def initialize_nextcloud_for_group(group):
 
 @receiver(signals.user_deactivated)
 def user_deactivated(sender, user, **kwargs):
-    #logger.warning("User %s was deactivated" % user.username)
-    pass
+    submit_with_retry(
+        nextcloud.disable_user, 
+        get_nc_user_id(user)
+    )
 
 @receiver(signals.user_activated)
 def user_activated(sender, user, **kwargs):
-    #logger.warning("User %s was activated" % user.username)
-    pass
+    submit_with_retry(
+        nextcloud.enable_user, 
+        get_nc_user_id(user)
+    )
 
 @receiver(signals.group_deactivated)
 def group_deactivated(sender, group, **kwargs):
