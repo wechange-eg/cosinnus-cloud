@@ -14,6 +14,13 @@ import urllib
 
 logger = logging.getLogger("cosinnus")
 
+# should the webdav API sort results by last modified?
+# if True, results will be sorted by the actual last modified date, which includes
+#     files' actual timestampt. so recently uploaded old files will not show as new!
+# if False, defaults to id ordering, which makes a nice "newest files" list, but
+#     ignores changes and edits to documents
+WEBDAV_API_ORDER_BY_LAST_MODIFIED = False
+
 
 class OCSResponse:
     def __init__(self, json):
@@ -227,38 +234,45 @@ def create_group_folder(name: str, group_id: str, raise_on_existing_name=True) -
 def group_folder_files_search(groupfolder_id, timeout=5):
     """ Webdav request that lists all files in order by last modified date """
     url = f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/remote.php/dav/"
-    body = f"""<?xml version="1.0" encoding="UTF-8"?>
-        <d:searchrequest xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
-            <d:basicsearch>
-                <d:select>
-                    <d:prop>
-                        <d:displayname/>
-                        <oc:fileid/>
-                    </d:prop>
-                </d:select>
-                <d:from>
-                    <d:scope>
-                        <d:href>/files/{settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME}/{groupfolder_id}/</d:href>
-                        <d:depth>infinity</d:depth>
-                    </d:scope>
-                </d:from>
-                <d:where>
-                    <d:gte>
-                        <d:prop>
-                            <oc:size/>
-                        </d:prop>
-                        <d:literal>0</d:literal>
-                    </d:gte>
-                </d:where>
-                <d:orderby>
-                    <d:prop>
-                        <oc:getlastmodified/>
-                    </d:prop>
-                    <d:descending/>
-                </d:orderby>
-            </d:basicsearch>
-        </d:searchrequest>
-    """
+    order_term = ""
+    if WEBDAV_API_ORDER_BY_LAST_MODIFIED:
+        order_term = """\
+<d:orderby>
+    <d:order>
+        <d:prop>
+            <d:getlastmodified/>
+        </d:prop>
+        <d:descending/>
+    </d:order>
+</d:orderby>"""
+    
+    body = f"""\
+<?xml version="1.0" encoding="UTF-8"?>
+<d:searchrequest xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
+    <d:basicsearch>
+        <d:select>
+            <d:prop>
+                <d:displayname/>
+                <oc:fileid/>
+            </d:prop>
+        </d:select>
+        <d:from>
+            <d:scope>
+                <d:href>/files/{settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME}/{groupfolder_id}/</d:href>
+                <d:depth>infinity</d:depth>
+            </d:scope>
+        </d:from>
+        <d:where>
+            <d:gte>
+                <d:prop>
+                    <oc:size/>
+                </d:prop>
+                <d:literal>0</d:literal>
+            </d:gte>
+        </d:where>
+        {order_term}
+    </d:basicsearch>
+</d:searchrequest>"""
     return _webdav_response_or_raise(
         requests.request(
             method='SEARCH',
