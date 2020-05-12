@@ -25,6 +25,36 @@
         <?php emit_css_loading_tags($_); ?>
         <?php emit_script_loading_tags($_); ?>
         <?php print_unescaped($_['headers']); ?>
+        <?php /* 
+        Can't figure out right now how to properly link to a JS script from theme, so inlining it for now
+        <script nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()) ?>" src="<?php p($urlGenerator->linkTo('core', 'js/wechange.js')) ?>?v=<?php p($version) ?>"></script>
+        */ ?>
+        
+        <?php /* Log out the main plattform account as well on a logout button click: */ ?>
+        <script type="text/javascript" nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()) ?>">
+            document.addEventListener('DOMContentLoaded', function() {
+            
+                <?php /* Not working:
+                alert("<?php $_['default_language']; ?>, <?php $_->getSystemValue('default_language', 'en') ?>");
+                alert("<?php $_['default_language']; ?>");
+                alert("<?php p($_['default_language']); ?>");
+                alert("<?php p($theme->getPlattformBaseUrl()); ?>"); (unknown)
+                alert("<?php p($thisconfig->getSystemValue('default_language', 'en')); ?>");
+                alert("<?php p($theme->getBaseUrl()); ?>"); (working as the only thing)
+                alert("<?php p($_['default_language']); ?>");
+                 */ ?>
+                
+                $('li[data-id="logout"] a').click(function(){
+                    // var baseUrl = 'http://wechange-dev';
+                    // TODO: remove hard-code of staging URL and use config parameter 
+                    var baseUrl = 'https://plattform-n.staging.wechange.de';
+                    $.ajax({
+                        url: baseUrl + '/logout/',
+                        async: false
+                    });
+                });              
+            });
+        </script>
     </head>
     <body id="<?php p($_['bodyid']);?>">
     <?php include 'layout.noscript.warning.php'; ?>
