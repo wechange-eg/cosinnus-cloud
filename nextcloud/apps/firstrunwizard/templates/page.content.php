@@ -34,7 +34,7 @@
             <?php print_unescaped($this->inc('texts/wizard.maintext')); ?>
         </p>
         <p>
-            <a href="/todo/cms-cloud-link/" target="_blank" rel="noreferrer noopener">
+            <a href="<?php print_unescaped($this->inc('urls/wizard.learnmore')); ?>" target="_blank" rel="noreferrer noopener">
                 <?php print_unescaped($this->inc('texts/wizard.learnmore')); ?>
             </a>
         </p>
