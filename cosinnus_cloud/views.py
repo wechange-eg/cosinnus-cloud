@@ -90,7 +90,7 @@ oauth_view = OAuthView.as_view()
 
 
 class CloudFilesContentWidgetView(BasePagedOffsetWidgetView):
-    """ Shows BaseTaggable content for the user """
+    """ Shows Nextcloud files retrieved via Webdav for the user """
 
     model = None
     # if True: will show only content that the user has recently visited
