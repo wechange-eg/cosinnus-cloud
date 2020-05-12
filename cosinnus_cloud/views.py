@@ -15,6 +15,10 @@ from cosinnus.models.group import CosinnusGroup
 from cosinnus.conf import settings
 
 import urllib.parse
+from cosinnus.views.user_dashboard import BasePagedOffsetWidgetView
+from cosinnus_cloud.utils import nextcloud
+from cosinnus.models.user_dashboard import DashboardItem
+from django.utils.html import escape
 
 logger = logging.getLogger("cosinnus")
 
@@ -82,3 +86,64 @@ class OAuthView(APIView):
 
 
 oauth_view = OAuthView.as_view()
+
+
+
+class CloudFilesContentWidgetView(BasePagedOffsetWidgetView):
+    """ Shows BaseTaggable content for the user """
+
+    model = None
+    # if True: will show only content that the user has recently visited
+    # if False: will show all of the users content, sorted by creation date
+    show_recent = False
+    
+    def get(self, request, *args, **kwargs):
+        self.show_recent = kwargs.pop('show_recent', False)
+        if self.show_recent:
+            self.offset_model_field = 'visited'
+        else:
+            self.offset_model_field = 'created'
+        return super(CloudFilesContentWidgetView, self).get(request, *args, **kwargs)
+    
+    
+    def get_data(self, **kwargs):
+        dataset = self.get_dataset()
+        
+        # we do not use timestamps, but instead just simple paging offsets,
+        # because we always get a full set of data, as nextcloud gives it to us
+        page_start = 0
+        if self.offset_timestamp:
+            page_start = int(self.offset_timestamp)
+        # calculate has_more
+        offset_start = page_start * self.page_size
+        has_more = len(dataset) > (offset_start) + self.page_size
+        # cut off at page start if given
+        dataset = dataset[offset_start:offset_start+self.page_size]
+        
+        items = self.get_items_from_dataset(dataset)
+        return {
+            'items': items,
+            'widget_title': _('Cloud Files'),
+            'has_more': has_more,
+            'offset_timestamp': page_start + 1,
+        }
+    
+    def get_dataset(self):
+        dataset = nextcloud.list_user_group_folders_files(self.request.user)
+        return dataset
+    
+    def get_items_from_dataset(self, dataset):
+        """ Returns a list of converted item data from the queryset """
+        items = []
+        for cloud_file in dataset:
+            item = DashboardItem()
+            item['icon'] = 'fa-file-text'
+            item['text'] = escape(cloud_file.title)
+            item['subtext'] = escape(cloud_file.root_folder)
+            item['url'] = cloud_file.download_url  # or cloud_file.url for a link into Nextcloud
+            items.append(item)
+        return items
+        
+    
+api_user_cloud_files_content = CloudFilesContentWidgetView.as_view()
+

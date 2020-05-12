@@ -11,15 +11,10 @@ from cosinnus.conf import settings
 from cosinnus.models.group import CosinnusPortal
 from bs4 import BeautifulSoup
 import urllib
+from cosinnus_cloud.models import CloudFile
+from cosinnus.utils.group import get_cosinnus_group_model
 
 logger = logging.getLogger("cosinnus")
-
-# should the webdav API sort results by last modified?
-# if True, results will be sorted by the actual last modified date, which includes
-#     files' actual timestampt. so recently uploaded old files will not show as new!
-# if False, defaults to id ordering, which makes a nice "newest files" list, but
-#     ignores changes and edits to documents
-WEBDAV_API_ORDER_BY_LAST_MODIFIED = False
 
 
 class OCSResponse:
@@ -229,20 +224,31 @@ def create_group_folder(name: str, group_id: str, raise_on_existing_name=True) -
             data={"group": group_id},
         )
     )
+
     
-    
-def group_folder_files_search(groupfolder_id, timeout=5):
-    """ Webdav request that lists all files in order by last modified date """
+def files_search(folder_id=None, timeout=5, order_by_last_modified=False):
+    """ Webdav request that lists all files in order by last modified date for all files from the root of
+        the admin user, or from a specified folder.
+        @param order_by_last_modified:  should the webdav API sort results by last modified?
+            if True, results will be sorted by the actual last modified date, which includes
+                files' actual timestampt. so recently uploaded old files will not show as new!
+            if False, defaults to id ordering, which makes a nice "newest files" list, but
+                ignores changes and edits to documents """
     url = f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/remote.php/dav/"
+    
+    folder_term = ""
+    if folder_id:
+        folder_term = f"{folder_id}/"
+    
     order_term = ""
-    if WEBDAV_API_ORDER_BY_LAST_MODIFIED:
+    if order_by_last_modified:
         order_term = """\
 <d:orderby>
     <d:order>
         <d:prop>
             <d:getlastmodified/>
         </d:prop>
-        <d:descending/>
+        <d:ascending/>
     </d:order>
 </d:orderby>"""
     
@@ -258,7 +264,7 @@ def group_folder_files_search(groupfolder_id, timeout=5):
         </d:select>
         <d:from>
             <d:scope>
-                <d:href>/files/{settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME}/{groupfolder_id}/</d:href>
+                <d:href>/files/{settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME}/{folder_term}</d:href>
                 <d:depth>infinity</d:depth>
             </d:scope>
         </d:from>
@@ -284,19 +290,51 @@ def group_folder_files_search(groupfolder_id, timeout=5):
         )
     )
 
-def list_group_folder_files(groupfolder_id):
-    """ Returns a tupled list of [filename, folder-name, file-id, download-url] to """
+
+def list_group_folder_files(groupfolder_id, user=None):
+    """ Returns a list of `CloudFile`s for a given nextcloud GroupFolder id """
     try:
-        response_text = group_folder_files_search(groupfolder_id)
+        response_text = files_search(groupfolder_id)
     except Exception as e:
         return []
+    file_list = parse_cloud_files_search_response(response_text, user=user)
+    return file_list
+
+
+def list_user_group_folders_files(user):
+    """ Returns a list of `CloudFile`s from all GroupFolders of a given user """
+    try:
+        response_text = files_search(order_by_last_modified=True)
+    except Exception as e:
+        return []
+    
+    # get nextcloud groupfolder ids for user's groups
+    user_groups = get_cosinnus_group_model().objects.get_for_user(user)
+    user_groupfolder_id_list = [urllib.parse.quote(group.nextcloud_group_id) for group in user_groups if group.nextcloud_group_id]
+    
+    # post-filter search for the file path starting with a groupfolder that the user is part of
+    file_list = parse_cloud_files_search_response(
+        response_text,
+        path_filter=lambda path: any((path.startswith(f"/{groupfolder}/") for groupfolder in user_groupfolder_id_list)),
+        user=user
+    )
+    return file_list
+
+
+def parse_cloud_files_search_response(response_text, path_filter=None, user=None):
+    """ Parses a Webdav endpoint response text into a list of `CloudFile`s
+        @param response_text: The requests's response.text
+        @param path_filter: If given, a function with path as argument that has to  
+            be truthy for each given file to be included in the results
+        @param user: If given, attaches the user as "owner" of each of the files
+    """
     
     soup = BeautifulSoup(response_text, 'xml')
     content = soup.find('d:multistatus')
     if not content:
         return []
     
-    file_list = []
+    cloud_file_list = []
     domain = CosinnusPortal.get_current().get_domain()
     
     all_responses = content.find_all('d:response') 
@@ -311,11 +349,24 @@ def list_group_folder_files(groupfolder_id):
             splits = filepath.split('/')
             id_pointer = search_result.find('oc:fileid')
             file_id = id_pointer and id_pointer.get_text() or None
-            file_list.append([
-                urllib.parse.unquote(splits[-1]),
-                urllib.parse.unquote(splits[-2]), 
-                file_id, 
-                domain + filepath
-            ])
-    return file_list
-        
+            url = domain + filepath
+            filename = urllib.parse.unquote(splits[-1])
+            folder_name = urllib.parse.unquote(splits[-2])
+            actual_path = filepath.split(f"/dav/files/{settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME}")[1]
+            if path_filter is not None and not path_filter(actual_path):
+                continue # result did not match the path filter
+            root_folder_name = urllib.parse.unquote(actual_path.split('/')[1]) # starts with '/', so take 2nd item
+            
+            cloud_file_list.append(
+                CloudFile(
+                    title=filename,
+                    url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/f/{file_id}",
+                    download_url=url,
+                    type=None,
+                    folder=folder_name,
+                    root_folder=root_folder_name,
+                    path=actual_path,
+                    user=user,
+                )
+            )
+    return cloud_file_list

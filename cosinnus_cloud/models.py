@@ -11,13 +11,17 @@ class CloudFile(object):
     download_url = None
     type = None # ??? 
     folder = None
+    root_folder = None
+    path = None
     
-    def __init__(self, title=None, url=None, download_url=None, type=None, folder=None, user=None):
+    def __init__(self, title=None, url=None, download_url=None, type=None, folder=None, root_folder=None, path=None, user=None):
         """ Supply a `user` to make download links work for users! """
         self.title = title
         self.url = url
         self.type = type
         self.folder = folder
+        self.root_folder = root_folder
+        self.path = path
         if user:
             from cosinnus_cloud.hooks import get_nc_user_id
             self.download_url = download_url.replace(

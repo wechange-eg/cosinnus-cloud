@@ -37,21 +37,14 @@ class Latest(DashboardWidget):
         rows = []
         if self.config.group.nextcloud_group_id:
             # get nextcloud file infos for this group folder
-            newest_group_files = nextcloud.list_group_folder_files(self.config.group.nextcloud_group_id)
+            newest_group_files = nextcloud.list_group_folder_files(self.config.group.nextcloud_group_id, user=self.request.user)
             total_count = len(newest_group_files)
             # paginate list
             if count != 0:
                 newest_group_files = newest_group_files[offset:offset+count]
             # wrap in CloudFile object for template
-            for filename, folder_name, file_id, url in newest_group_files:
-                rows.append(CloudFile(
-                    title=filename,
-                    url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/f/{file_id}",
-                    download_url=url,
-                    type=None,
-                    folder=folder_name,
-                    user=self.request.user
-                ))
+            rows = newest_group_files
+            
             
         data = {
             'rows': rows,
