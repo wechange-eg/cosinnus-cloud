@@ -98,7 +98,7 @@ def _webdav_response_or_raise(requests_response: requests.Response):
 
 
 def create_user(
-    userid: str, display_name: str, email: str, groups: Sequence[str]
+    userid: str, display_name: str, email: str
 ) -> OCSResponse:
 
     # We don't want the user to receive an email asking the user to set a password, as the
@@ -106,18 +106,18 @@ def create_user(
     random_password = "".join(
         secrets.choice(string.ascii_letters + string.digits) for _ in range(32)
     )
-
+    
+    data = {
+        "userid": userid,
+        "displayName": display_name,
+        "email": email,
+        "password": random_password,
+    }
     res = requests.post(
         f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/ocs/v1.php/cloud/users",
         auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
         headers=HEADERS,
-        data={
-            "userid": userid,
-            "displayName": display_name,
-            "email": email,
-            "groups": groups,
-            "password": random_password,
-        },
+        data=data,
     )
     return _response_or_raise(res)
 

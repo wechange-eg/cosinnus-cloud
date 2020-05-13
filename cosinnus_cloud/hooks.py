@@ -122,10 +122,6 @@ def create_user_from_obj(user):
         get_nc_user_id(user),
         full_name(user),
         user.email,
-        [
-            group.nextcloud_group_id
-            for group in get_cosinnus_group_model().objects.get_for_user(user)
-        ],
     )
 
 
