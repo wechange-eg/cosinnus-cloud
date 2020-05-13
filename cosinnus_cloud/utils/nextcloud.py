@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 import urllib
 from cosinnus_cloud.models import CloudFile
 from cosinnus.utils.group import get_cosinnus_group_model
+from cosinnus_cloud.utils.text import utf8_encode
 
 logger = logging.getLogger("cosinnus")
 
@@ -286,7 +287,7 @@ def files_search(folder_id=None, timeout=5, order_by_last_modified=False):
             auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
             headers=WEBDAV_HEADERS,
             timeout=timeout,
-            data=body,
+            data=utf8_encode(body),
         )
     )
 
