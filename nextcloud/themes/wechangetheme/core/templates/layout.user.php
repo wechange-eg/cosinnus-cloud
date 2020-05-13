@@ -47,7 +47,7 @@
                 $('li[data-id="logout"] a').click(function(){
                     // var baseUrl = 'http://wechange-dev';
                     // TODO: remove hard-code of staging URL and use config parameter 
-                    var baseUrl = 'https://plattform-n.staging.wechange.de';
+                    var baseUrl = 'https://plattformn.staging.wechange.de';
                     $.ajax({
                         url: baseUrl + '/logout/',
                         async: false

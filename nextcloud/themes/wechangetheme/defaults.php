@@ -16,7 +16,7 @@ class OC_Theme {
      * @return string URL
      */
     public function getPlattformBaseUrl() {
-        return 'https://plattform-n.staging.wechange.de';
+        return 'https://plattformn.staging.wechange.de';
     }
 
 	/**
