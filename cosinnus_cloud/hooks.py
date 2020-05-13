@@ -146,7 +146,8 @@ def generate_group_nextcloud_id(group):
         )
     elif not filtered_name or is_number(filtered_name):
         filtered_name = "Folder" + filtered_name
-    filtered_name = filtered_name[:100]  # max length
+    # max length for nextcloud groups (group folders could be longer, but lets keep it like that)
+    filtered_name = filtered_name[:64]  
 
     # uniquify the id-name in case it clashes
     all_names = (
