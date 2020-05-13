@@ -143,9 +143,9 @@ def generate_group_nextcloud_id(group):
     filtered_name = filtered_name.replace("-----", " ").strip()
     if getattr(settings, "COSINNUS_CLOUD_PREFIX_GROUP_FOLDERS", False):
         filtered_name = "%s %s" % (
-            "Gruppe"
+            "G - "
             if group.type == get_cosinnus_group_model().TYPE_SOCIETY
-            else "Projekt",
+            else "P - ",
             filtered_name,
         )
     elif not filtered_name or is_number(filtered_name):
