@@ -69,6 +69,7 @@ class Command(BaseCommand):
                             raise
                         errors += 1
                         self.stdout.write("Error (group create): Exception: " + str(e))
+                        logger.error("Error (nextcloud group create): Exception: " + str(e), extra={"exc": e})
     
                     # WARNING: Creating a group folder in a group with an existing one will ERASE the old group folder!
                     # So never create a group folder on a group that already has one!
@@ -91,6 +92,7 @@ class Command(BaseCommand):
                             self.stdout.write(
                                 "Error (group folder create): Exception: " + str(e)
                             )
+                            logger.error("Error (nextcloud group folder create): Exception: " + str(e), extra={"exc": e})
     
                     # add members to group
                     nextcloud_user_ids = [get_nc_user_id(member) for member in group.actual_members]
@@ -114,6 +116,7 @@ class Command(BaseCommand):
                             self.stdout.write(
                                 "Error (add user to group): Exception: " + str(e)
                             )
+                            logger.error("Error (nextcloud group user add): Exception: " + str(e), extra={"exc": e})
                 self.stdout.write(
                     f"{counter}/{total_groups} groups processed, {created} groups created, {folders_created} group folders created, {users_added} groups members added ({errors} Errors)",
                 )
