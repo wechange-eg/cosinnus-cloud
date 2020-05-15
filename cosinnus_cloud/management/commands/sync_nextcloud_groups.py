@@ -49,10 +49,14 @@ class Command(BaseCommand):
                 # only run this for groups that have the cloud app activated
                 if not 'cosinnus_cloud' in group.get_deactivated_apps():
                     
+                    # create and validate group and groupfolder name
                     current_group_created = False
                     if not group.nextcloud_group_id:
                         generate_group_nextcloud_id(group)
-    
+                    if group.nextcloud_group_id and not group.nextcloud_groupfolder_name:
+                        group.nextcloud_groupfolder_name = group.nextcloud_group_id
+                        group.save(update_fields=["nextcloud_groupfolder_name"])
+                    
                     # create group
                     try:
                         nextcloud.create_group(group.nextcloud_group_id)
@@ -74,10 +78,10 @@ class Command(BaseCommand):
                     # WARNING: Creating a group folder in a group with an existing one will ERASE the old group folder!
                     # So never create a group folder on a group that already has one!
                     if current_group_created:
-                        # create group folder
+                        # create group folder and save its id
                         try:
                             nextcloud.create_group_folder(
-                                group.nextcloud_group_id, group.nextcloud_group_id, raise_on_existing_name=False,
+                                group.nextcloud_groupfolder_name, group.nextcloud_group_id, group, raise_on_existing_name=False,
                             )
                             folders_created += 1
                         except OCSException as e:

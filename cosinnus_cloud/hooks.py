@@ -125,13 +125,16 @@ def create_user_from_obj(user):
     )
 
 
-def generate_group_nextcloud_id(group):
+def generate_group_nextcloud_id(group, save=True, force_generate=full_name):
     """ If one doesn't yet exist, generates, saves and returns 
         a unique file-system-valid id that is used for both the 
         nextcloud group and group folder for this group. 
         Remove leading and trailing spaces; leave other spaces intact and remove 
-        anything that is not an alphanumeric.  """
-    if group.nextcloud_group_id:
+        anything that is not an alphanumeric.
+        @param save: If True, the group will be saved to DB after generation
+        @param force_generate: Generates a new id, even if one already exists
+          """
+    if group.nextcloud_group_id and not force_generate:
         return group.nextcloud_group_id
 
     filtered_name = str(group.name).strip().replace(" ", "-----")
@@ -150,11 +153,12 @@ def generate_group_nextcloud_id(group):
     filtered_name = filtered_name[:64]  
 
     # uniquify the id-name in case it clashes
-    all_names = (
+    all_names = list(set(
         get_cosinnus_group_model()
         .objects.filter(nextcloud_group_id__istartswith=filtered_name)
+        .exclude(id=group.id)  # exclude self
         .values_list("nextcloud_group_id", flat=True)
-    )
+    ))
     all_names = [name.lower() for name in all_names]
     all_names += [
         "admin"
@@ -165,8 +169,11 @@ def generate_group_nextcloud_id(group):
     while unique_name.lower() in all_names:
         unique_name = "%s %d" % (filtered_name, counter)
         counter += 1
-    group.nextcloud_group_id = unique_name
-    group.save(update_fields=["nextcloud_group_id"])
+    
+    if save == True:
+        group.nextcloud_group_id = unique_name
+        group.nextcloud_groupfolder_name = unique_name
+        group.save(update_fields=["nextcloud_group_id", "nextcloud_groupfolder_name"])
     return group.nextcloud_group_id
 
 
@@ -210,6 +217,7 @@ def initialize_nextcloud_for_group(group):
         nextcloud.create_group_folder,
         unique_name,
         unique_name,
+        group,
         raise_on_existing_name=False,
     )
     # add admin user to group

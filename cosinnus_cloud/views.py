@@ -25,10 +25,9 @@ logger = logging.getLogger("cosinnus")
 
 def get_nextcloud_group_folder_url(group):
     """ Returns the direct link to a groupfolder in nextcloud for a given group """
-    if group.nextcloud_group_id:
-        nextcloud_group_id = group.nextcloud_group_id
+    if group.nextcloud_group_id and group.nextcloud_groupfolder_name:
         relative_url = settings.COSINNUS_CLOUD_GROUP_FOLDER_IFRAME_URL % {
-            "group_folder_name": urllib.parse.quote(nextcloud_group_id),
+            "group_folder_name": urllib.parse.quote(group.nextcloud_groupfolder_name),
         }
     else:
         relative_url = ""

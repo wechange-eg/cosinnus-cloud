@@ -183,13 +183,15 @@ def create_group(groupid: str) -> OCSResponse:
         )
     except OCSException as e:
         if e.statuscode == 102:
-            logger.warning("group [%s] already exists, doing nothing", groupid)
+            logger.info("group [%s] already exists, doing nothing", groupid)
             return None
         raise
         
 
 
-def create_group_folder(name: str, group_id: str, raise_on_existing_name=True) -> None:
+def create_group_folder(name: str, group_id: str, group, raise_on_existing_name=True) -> None:
+    """ Creates a nextcloud groupfolder for the given group, sets its quota, and returns its
+        nextcloud DB id. """
     # First, check whether the name is already taken (workaround for bug in groupfolders)
     response = _response_or_raise(
         requests.get(
@@ -198,13 +200,23 @@ def create_group_folder(name: str, group_id: str, raise_on_existing_name=True) -
             auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
         )
     )
-
-    if response.data and any(folder['mount_point'] == name for folder in response.data.values()):
+    
+    # if a group folder with that name exists already in the NC, do nothing, as this is already our target folder
+    same_name_entries = [folder for folder in response.data.values() if folder['mount_point'] == name]
+    if len(same_name_entries) > 0:
+        # we do however, check if the folder id is set in the cosinnus group!
+        if not group.nextcloud_groupfolder_id:
+            logger.info('Group had its nextcloud groupfolder id missing - corrected it with matched folder!')
+            group.nextcloud_groupfolder_id = int(same_name_entries[0].get('id'))
+            group.save(update_fields=["nextcloud_groupfolder_id"])
+            
         if raise_on_existing_name:
             raise ValueError("A groupfolder with that name already exists")
         else:
-            logger.warning("group folder [%s] already exists, doing nothing", name)
+            logger.info("group folder [%s] already exists, doing nothing", name)
             return
+        
+    # create groupfolder
     response = _response_or_raise(
         requests.post(
             f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders",
@@ -213,10 +225,21 @@ def create_group_folder(name: str, group_id: str, raise_on_existing_name=True) -
             data={"mountpoint": name},
         )
     )
-
+    
+    # save the groupfolder id (not the name, 
+    # that has been saved at group id generation time in `generate_group_nextcloud_id`)
     folder_id = response.data["id"]
-
-    return _response_or_raise(
+    if folder_id:
+        group.nextcloud_groupfolder_id = int(folder_id)
+        group.save(update_fields=["nextcloud_groupfolder_id"])
+    else:
+        logger.error('Nextcloud folder creation did not return a folder id!', extra={
+            'group': group,
+            'folder_id': folder_id,
+        })
+    
+    # assign our group access to the groupfolder
+    latest_response = _response_or_raise(
         requests.post(
             f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders/{folder_id}/groups",
             headers=HEADERS,
@@ -224,9 +247,42 @@ def create_group_folder(name: str, group_id: str, raise_on_existing_name=True) -
             data={"group": group_id},
         )
     )
+    
+    # set the quota for the group folder, in bytes, unless the quota is the
+    # default (-3 for "unlimited")
+    if settings.COSINNUS_CLOUD_NEXTCLOUD_GROUPFOLDER_QUOTA and \
+         settings.COSINNUS_CLOUD_NEXTCLOUD_GROUPFOLDER_QUOTA != -3:
+        latest_response = _response_or_raise(
+            requests.post(
+                f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders/{folder_id}/quota",
+                headers=HEADERS,
+                auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+                data={"quota": settings.COSINNUS_CLOUD_NEXTCLOUD_GROUPFOLDER_QUOTA},
+            )
+        )
+
+    return latest_response
+
+
+
+def rename_group_and_group_folder(old_name: str, group_id: str, raise_on_existing_name=True) -> None:
+    folder_id = None
+    latest_response = _response_or_raise(
+        requests.post(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders/{folder_id}/quota",
+            headers=HEADERS,
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+            data={"quota": settings.COSINNUS_CLOUD_NEXTCLOUD_GROUPFOLDER_QUOTA},
+        )
+    )
+    
+
+    return latest_response
+
+
 
     
-def files_search(folder_id=None, timeout=5, order_by_last_modified=False):
+def files_search(folder_name=None, timeout=5, order_by_last_modified=False):
     """ Webdav request that lists all files in order by last modified date for all files from the root of
         the admin user, or from a specified folder.
         @param order_by_last_modified:  should the webdav API sort results by last modified?
@@ -237,8 +293,8 @@ def files_search(folder_id=None, timeout=5, order_by_last_modified=False):
     url = f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/remote.php/dav/"
     
     folder_term = ""
-    if folder_id:
-        folder_term = f"{folder_id}/"
+    if folder_name:
+        folder_term = f"{folder_name}/"
     
     order_term = ""
     if order_by_last_modified:
@@ -291,10 +347,10 @@ def files_search(folder_id=None, timeout=5, order_by_last_modified=False):
     )
 
 
-def list_group_folder_files(groupfolder_id, user=None):
+def list_group_folder_files(groupfolder_name, user=None):
     """ Returns a list of `CloudFile`s for a given nextcloud GroupFolder id """
     try:
-        response_text = files_search(groupfolder_id)
+        response_text = files_search(groupfolder_name)
     except Exception as e:
         return []
     file_list = parse_cloud_files_search_response(response_text, user=user)
@@ -310,12 +366,12 @@ def list_user_group_folders_files(user):
     
     # get nextcloud groupfolder ids for user's groups
     user_groups = get_cosinnus_group_model().objects.get_for_user(user)
-    user_groupfolder_id_list = [urllib.parse.quote(group.nextcloud_group_id) for group in user_groups if group.nextcloud_group_id]
+    user_groupfolder_name_list = [urllib.parse.quote(group.nextcloud_groupfolder_name) for group in user_groups if group.nextcloud_groupfolder_name]
     
     # post-filter search for the file path starting with a groupfolder that the user is part of
     file_list = parse_cloud_files_search_response(
         response_text,
-        path_filter=lambda path: any((path.startswith(f"/{groupfolder}/") for groupfolder in user_groupfolder_id_list)),
+        path_filter=lambda path: any((path.startswith(f"/{groupfolder}/") for groupfolder in user_groupfolder_name_list)),
         user=user
     )
     return file_list
