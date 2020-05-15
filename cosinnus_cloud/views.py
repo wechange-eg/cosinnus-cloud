@@ -139,7 +139,8 @@ class CloudFilesContentWidgetView(BasePagedOffsetWidgetView):
             item['icon'] = 'fa-file-text'
             item['text'] = escape(cloud_file.title)
             item['subtext'] = escape(cloud_file.root_folder)
-            item['url'] = cloud_file.download_url  # or cloud_file.url for a link into Nextcloud
+            # cloud_file.download_url for a direct download or cloud_file.url for a link into Nextcloud
+            item['url'] = cloud_file.url  
             items.append(item)
         return items
         
