@@ -8,7 +8,6 @@ from typing import Mapping, Sequence
 
 import requests
 from cosinnus.conf import settings
-from cosinnus.models.group import CosinnusPortal
 from bs4 import BeautifulSoup
 import urllib
 from cosinnus_cloud.models import CloudFile
@@ -336,8 +335,6 @@ def parse_cloud_files_search_response(response_text, path_filter=None, user=None
         return []
     
     cloud_file_list = []
-    domain = CosinnusPortal.get_current().get_domain()
-    
     all_responses = content.find_all('d:response') 
     # since nextcloud seemingly ignores the last-modified sorting, reverse the list,
     # at least then it is sorted by IDs (last created)
@@ -350,7 +347,6 @@ def parse_cloud_files_search_response(response_text, path_filter=None, user=None
             splits = filepath.split('/')
             id_pointer = search_result.find('oc:fileid')
             file_id = id_pointer and id_pointer.get_text() or None
-            url = domain + filepath
             filename = urllib.parse.unquote(splits[-1])
             folder_name = urllib.parse.unquote(splits[-2])
             actual_path = filepath.split(f"/dav/files/{settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME}")[1]
@@ -362,7 +358,7 @@ def parse_cloud_files_search_response(response_text, path_filter=None, user=None
                 CloudFile(
                     title=filename,
                     url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/f/{file_id}",
-                    download_url=url,
+                    download_url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}{filepath}",
                     type=None,
                     folder=folder_name,
                     root_folder=root_folder_name,
