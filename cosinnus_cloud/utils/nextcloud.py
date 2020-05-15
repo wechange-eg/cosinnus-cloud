@@ -227,7 +227,7 @@ def create_group_folder(name: str, group_id: str, group, raise_on_existing_name=
     )
     
     # save the groupfolder id (not the name, 
-    # that has been saved at group id generation time in `generate_group_nextcloud_id`)
+    # that has been saved at group id generation time in `generate_group_nextcloud_groupfolder_name`)
     folder_id = response.data["id"]
     if folder_id:
         group.nextcloud_groupfolder_id = int(folder_id)
@@ -264,20 +264,17 @@ def create_group_folder(name: str, group_id: str, group, raise_on_existing_name=
     return latest_response
 
 
-
-def rename_group_and_group_folder(old_name: str, group_id: str, raise_on_existing_name=True) -> None:
-    folder_id = None
-    latest_response = _response_or_raise(
+def rename_group_and_group_folder(folder_id: int, new_name: str) -> None:
+    """ Renames a group folder for a given id (int) """
+    response = _response_or_raise(
         requests.post(
-            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders/{folder_id}/quota",
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders/{folder_id}/mountpoint",
             headers=HEADERS,
             auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
-            data={"quota": settings.COSINNUS_CLOUD_NEXTCLOUD_GROUPFOLDER_QUOTA},
+            data={"mountpoint": new_name},
         )
     )
-    
-
-    return latest_response
+    return response.data and response.data == True
 
 
 

@@ -35,6 +35,8 @@ class Latest(DashboardWidget):
         count = int(self.config['amount'])
         
         rows = []
+        total_count = 0
+        newest_group_files = []
         if not 'cosinnus_cloud' in self.config.group.get_deactivated_apps() and \
                 self.config.group.nextcloud_group_id and self.config.group.nextcloud_groupfolder_name:
             # get nextcloud file infos for this group folder

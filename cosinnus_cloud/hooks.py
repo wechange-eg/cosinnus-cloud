@@ -16,6 +16,9 @@ from .utils import nextcloud
 import re
 from cosinnus.utils.functions import is_number
 from cosinnus.utils.group import get_cosinnus_group_model
+from django.db.models.signals import post_save
+from cosinnus_cloud.utils.nextcloud import rename_group_and_group_folder
+from cosinnus.models.group_extra import CosinnusProject, CosinnusSociety
 
 logger = logging.getLogger("cosinnus")
 
@@ -125,17 +128,29 @@ def create_user_from_obj(user):
     )
 
 
-def generate_group_nextcloud_id(group, save=True, force_generate=full_name):
+def generate_group_nextcloud_id(group, save=True, force_generate=False):
+    """ See `generate_group_nextcloud_field` """
+    return generate_group_nextcloud_field(group, 'nextcloud_group_id', save=save, force_generate=force_generate)
+
+
+def generate_group_nextcloud_groupfolder_name(group, save=True, force_generate=False):
+    """ See `generate_group_nextcloud_field` """
+    return generate_group_nextcloud_field(group, 'nextcloud_groupfolder_name', save=save, force_generate=force_generate)
+
+
+def generate_group_nextcloud_field(group, field, save=True, force_generate=False):
     """ If one doesn't yet exist, generates, saves and returns 
         a unique file-system-valid id that is used for both the 
         nextcloud group and group folder for this group. 
         Remove leading and trailing spaces; leave other spaces intact and remove 
         anything that is not an alphanumeric.
+        @param field: The field for which a unique nextcloud name should be generated. Usually
+            either `nextcloud_group_id` or `nextcloud_groupfolder_name`
         @param save: If True, the group will be saved to DB after generation
         @param force_generate: Generates a new id, even if one already exists
           """
-    if group.nextcloud_group_id and not force_generate:
-        return group.nextcloud_group_id
+    if hasattr(group, field) and getattr(group, field) and not force_generate:
+        return getattr(group, field)
 
     filtered_name = str(group.name).strip().replace(" ", "-----")
     filtered_name = re.sub(r"(?u)[^\w-]", "", filtered_name)
@@ -155,9 +170,9 @@ def generate_group_nextcloud_id(group, save=True, force_generate=full_name):
     # uniquify the id-name in case it clashes
     all_names = list(set(
         get_cosinnus_group_model()
-        .objects.filter(nextcloud_group_id__istartswith=filtered_name)
+        .objects.filter(**{field + '__istartswith': filtered_name})
         .exclude(id=group.id)  # exclude self
-        .values_list("nextcloud_group_id", flat=True)
+        .values_list(field, flat=True)
     ))
     all_names = [name.lower() for name in all_names]
     all_names += [
@@ -170,11 +185,10 @@ def generate_group_nextcloud_id(group, save=True, force_generate=full_name):
         unique_name = "%s %d" % (filtered_name, counter)
         counter += 1
     
+    setattr(group, field, unique_name)
     if save == True:
-        group.nextcloud_group_id = unique_name
-        group.nextcloud_groupfolder_name = unique_name
-        group.save(update_fields=["nextcloud_group_id", "nextcloud_groupfolder_name"])
-    return group.nextcloud_group_id
+        group.save(update_fields=[field])
+    return unique_name
 
 
 @receiver(signals.group_object_ceated)
@@ -200,23 +214,52 @@ def group_cloud_app_activated_sub(sender, group, apps, **kwargs):
 def group_cloud_app_deactivated_sub(sender, group, apps, **kwargs):
     #logger.warn('DEact apps: %s' % str(apps))
     pass
-    
+
+
+def rename_nextcloud_groupfolder_on_group_rename(sender, created, **kwargs):
+    """ Tries to rename the nextcloud group folder to reflect a Group's naming change """
+    if not created:
+        group = kwargs.get('instance')
+        if not 'cosinnus_cloud' in group.get_deactivated_apps() and \
+                group.nextcloud_group_id and group.nextcloud_groupfolder_name and group.nextcloud_groupfolder_id:
+            # just softly generate a new folder name first, and see if it has to be changed (because of a group rename)
+            old_nextcloud_groupfolder_name = group.nextcloud_groupfolder_name
+            generate_group_nextcloud_groupfolder_name(group, save=False, force_generate=True)
+            new_nextcloud_groupfolder_name = group.nextcloud_groupfolder_name
+            # rename the folder if the name would be a different one
+            if new_nextcloud_groupfolder_name != old_nextcloud_groupfolder_name:
+                result = rename_group_and_group_folder(group.nextcloud_groupfolder_id, new_nextcloud_groupfolder_name)
+                # if the rename was successful, save the group. 
+                # otherwise, reload it to discard the newly generated folder name on the object
+                if result is True:
+                    group.save(update_fields=['nextcloud_groupfolder_name'])
+                    return 
+            group.refresh_from_db()
+        
+post_save.connect(rename_nextcloud_groupfolder_on_group_rename, sender=get_cosinnus_group_model())
+post_save.connect(rename_nextcloud_groupfolder_on_group_rename, sender=CosinnusProject)
+post_save.connect(rename_nextcloud_groupfolder_on_group_rename, sender=CosinnusSociety)
+
     
 def initialize_nextcloud_for_group(group):
-    unique_name = generate_group_nextcloud_id(group)
+    # generate group and groupfolder name
+    generate_group_nextcloud_id(group, save=False)
+    generate_group_nextcloud_groupfolder_name(group, save=False)
+    group.save(update_fields=['nextcloud_group_id', 'nextcloud_groupfolder_name'])
+    
     logger.debug(
         "Creating new group [%s] in Nextcloud (wechange group name [%s])",
-        unique_name,
-        unique_name,
+        group.nextcloud_groupfolder_name,
+        group.nextcloud_group_id,
     )
 
     # create nextcloud group
-    submit_with_retry(nextcloud.create_group, unique_name)
+    submit_with_retry(nextcloud.create_group, group.nextcloud_group_id)
     # create nextcloud group folder
     submit_with_retry(
         nextcloud.create_group_folder,
-        unique_name,
-        unique_name,
+        group.nextcloud_groupfolder_name,
+        group.nextcloud_group_id,
         group,
         raise_on_existing_name=False,
     )

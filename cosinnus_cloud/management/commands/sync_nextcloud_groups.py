@@ -16,7 +16,7 @@ from cosinnus_cloud.hooks import (
     create_user_from_obj,
     generate_group_nextcloud_id,
     get_nc_user_id,
-)
+    generate_group_nextcloud_groupfolder_name)
 from cosinnus_cloud.utils.nextcloud import OCSException
 from cosinnus.utils.group import get_cosinnus_group_model
 from cosinnus_cloud.utils import nextcloud
@@ -52,7 +52,9 @@ class Command(BaseCommand):
                     # create and validate group and groupfolder name
                     current_group_created = False
                     if not group.nextcloud_group_id:
-                        generate_group_nextcloud_id(group)
+                        generate_group_nextcloud_id(group, save=False)
+                        generate_group_nextcloud_groupfolder_name(group, save=False)
+                        group.save(update_fields=['nextcloud_group_id', 'nextcloud_groupfolder_name'])
                     if group.nextcloud_group_id and not group.nextcloud_groupfolder_name:
                         group.nextcloud_groupfolder_name = group.nextcloud_group_id
                         group.save(update_fields=["nextcloud_groupfolder_name"])
