@@ -30,9 +30,7 @@
 
 <div class="page" data-title="<?php p($l->t('A safe home for all your data')); ?>" data-subtitle="">
 	<div class="content content-values">
-		<p>
-            <?php print_unescaped($this->inc('texts/wizard.maintext')); ?>
-        </p>
+        <?php print_unescaped($this->inc('texts/wizard.maintext')); ?>
         <p>
             <a href="<?php print_unescaped($this->inc('urls/wizard.learnmore')); ?>" target="_blank" rel="noreferrer noopener">
                 <?php print_unescaped($this->inc('texts/wizard.learnmore')); ?>

@@ -1,1 +1,1 @@
-Zurück zu plattform n
+Zurück zum persönlichen Dashboard
