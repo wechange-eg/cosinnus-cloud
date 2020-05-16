@@ -30,7 +30,7 @@ def submit_with_retry(fn, *args, **kwargs):
     @wraps(fn)
     def exec_with_retry():
         # seconds to wait before retrying.
-        retry_wait = [5, 10, 60, 60, 600]
+        retry_wait = [2, 5, 10, 30, 60, 300]
         while True:
             try:
                 return fn(*args, **kwargs)
