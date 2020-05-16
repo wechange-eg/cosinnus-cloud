@@ -195,20 +195,25 @@ def generate_group_nextcloud_field(group, field, save=True, force_generate=False
 def group_created_sub(sender, group, **kwargs):
     # only initialize if the cosinnus-app is actually activated
     if 'cosinnus_cloud' not in group.get_deactivated_apps():
-        initialize_nextcloud_for_group(group)
+        submit_with_retry(
+            initialize_nextcloud_for_group,
+            group
+        )
     
     
 @receiver(signals.group_apps_activated)
 def group_cloud_app_activated_sub(sender, group, apps, **kwargs):
     """ Listen for the cloud app being activated """
     if 'cosinnus_cloud' in apps:
-        initialize_nextcloud_for_group(group)
-        for user in group.actual_members:
-            submit_with_retry(
-                nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
-            )
-            # we don't need to remove users who have left the group while the app was deactivated here,
-            # because that listener is always active
+        def _conurrent_wrap():
+            initialize_nextcloud_for_group(group)
+            for user in group.actual_members:
+                submit_with_retry(
+                    nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
+                )
+                # we don't need to remove users who have left the group while the app was deactivated here,
+                # because that listener is always active
+        submit_with_retry(_conurrent_wrap)
 
 @receiver(signals.group_apps_deactivated)
 def group_cloud_app_deactivated_sub(sender, group, apps, **kwargs):
@@ -254,18 +259,18 @@ def initialize_nextcloud_for_group(group):
     )
 
     # create nextcloud group
-    submit_with_retry(nextcloud.create_group, group.nextcloud_group_id)
+    nextcloud.create_group(group.nextcloud_group_id)
     # create nextcloud group folder
-    submit_with_retry(
-        nextcloud.create_group_folder,
+    nextcloud.create_group_folder(
         group.nextcloud_groupfolder_name,
         group.nextcloud_group_id,
         group,
         raise_on_existing_name=False,
     )
     # add admin user to group
-    submit_with_retry(
-        nextcloud.add_user_to_group, settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME, group.nextcloud_group_id
+    nextcloud.add_user_to_group(
+        settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME,
+        group.nextcloud_group_id
     )
 
 
