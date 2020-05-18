@@ -33,21 +33,8 @@
         <?php /* Log out the main plattform account as well on a logout button click: */ ?>
         <script type="text/javascript" nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()) ?>">
             document.addEventListener('DOMContentLoaded', function() {
-            
-                <?php /* Not working:
-                alert("<?php $_['default_language']; ?>, <?php $_->getSystemValue('default_language', 'en') ?>");
-                alert("<?php $_['default_language']; ?>");
-                alert("<?php p($_['default_language']); ?>");
-                alert("<?php p($theme->getPlattformBaseUrl()); ?>"); (unknown)
-                alert("<?php p($thisconfig->getSystemValue('default_language', 'en')); ?>");
-                alert("<?php p($theme->getBaseUrl()); ?>"); (working as the only thing)
-                alert("<?php p($_['default_language']); ?>");
-                 */ ?>
-                
                 $('li[data-id="logout"] a').click(function(){
-                    // var baseUrl = 'http://wechange-dev';
-                    // TODO: remove hard-code of staging URL and use config parameter 
-                    var baseUrl = 'https://plattformn.staging.wechange.de';
+                    var baseUrl = '<?php print_unescaped(\OC::$server->getConfig()->getSystemValue('wechange_plattform_root', '/')); ?>';
                     $.ajax({
                         url: baseUrl + '/logout/',
                         async: false
@@ -72,7 +59,7 @@
         <header role="banner" id="header">
             <div class="header-left">
                 <?php include 'layout.plattform-nav-button.php'; ?>
-                <a id="nextcloud"href="<?php print_unescaped(link_to('', 'index.php')); ?>" title="<?php p($theme->getName()); ?>">
+                <a id="nextcloud" href="<?php print_unescaped(link_to('', 'index.php')); ?>" title="<?php p($theme->getName()); ?>">
                     <div class="logo logo-plattform">
                         <h1 class="hidden-visually">
                             <?php p($theme->getName()); ?> <?php p(!empty($_['application'])?$_['application']: $l->t('Apps')); ?>

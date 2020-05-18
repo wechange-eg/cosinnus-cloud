@@ -7,18 +7,9 @@ class OC_Theme {
      * @return string URL
      */
     public function getBaseUrl() {
-        return 'https://nextcloud.plattform-n.staging.wechange.de';
+        return '/';
     }
     
-    /**
-     * Returns the base URL
-     * TODO: Not working right now.
-     * @return string URL
-     */
-    public function getPlattformBaseUrl() {
-        return 'https://plattformn.staging.wechange.de';
-    }
-
 	/**
 	 * Returns the documentation URL
 	 * @return string URL
@@ -32,7 +23,7 @@ class OC_Theme {
 	 * @return string title
 	 */
 	public function getTitle() {
-		return 'n Cloud';
+		return 'n-Cloud';
 	}
 
 	/**
@@ -40,7 +31,7 @@ class OC_Theme {
      * @return string title
      */
     public function getName() {
-        return 'plattform n Cloud';
+        return 'n-Cloud';
     }
     
 	/**
@@ -48,7 +39,7 @@ class OC_Theme {
 	 * @return string title
 	 */
 	public function getHTMLName() {
-		return 'n Cloud';
+		return 'n-Cloud';
 	}
 
 	/**
@@ -108,7 +99,7 @@ class OC_Theme {
 	 * @return string
 	 */
 	public function getColorPrimary() {
-		return '#0082C9';
+		return '#315F72';
 	}
 
 	/**
@@ -117,7 +108,7 @@ class OC_Theme {
 	 */
 	public function getScssVariables() {
 		return [
-			'color-primary' => '#0082C9'
+			'color-primary' => '#315F72'
 		];
 	}
 	
