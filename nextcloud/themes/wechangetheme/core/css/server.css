@@ -37,6 +37,11 @@ body {
     fill: #FFFFFF;
 }
 
+#firstrunwizard .modal-container {
+    max-width: 1000px !important;
+    max-height: 750px !important;
+}
+
 /* use logos from theme */
 #header .logo,
 #firstrunwizard .logo {
