@@ -1,4 +1,35 @@
+@font-face {
+    font-family: 'Brandon Grotesque';
+    font-style: normal;
+    font-weight: normal;
+    src: url('./../css/fonts/brandon/brandongrotesque.otf');
+}
+@font-face {
+    font-family: 'Brandon Text';
+    font-style: normal;
+    font-weight: normal;
+    src: url('./../css/fonts/brandon/brandon-text-regular.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'Brandon Text';
+    font-style: italic;
+    font-weight: normal;
+    src: url('./../css/fonts/brandon/brandon-text-italic.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'Brandon Text';
+    font-style: normal;
+    font-weight: bold;
+    src: url('./../css/fonts/brandon/brandon-text-bold.ttf') format('truetype');
+}
 
+body {
+    font-family: 'Brandon Text', -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;;
+}
+
+#contactsmenu {
+    display: none;
+}
 
 /* use logos from theme */
 #header .logo,
@@ -49,6 +80,7 @@
     display: none;
 }
 
+
 #nextcloud {
     padding-left: 110px;
 }
@@ -63,20 +95,40 @@
     align-items: center;
     flex-wrap: wrap;
     overflow: hidden;
+}
 
+
+/* --- Custom portal overwrites --- */
+
+
+#nextcloud-plattform {
     /* our overwrites */
-    background-color: #035879;
+    background-color: #315f72;
     padding-left:50px;
+    border-right: solid 1px #DBDBDB;
+}
+
+#nextcloud-plattform:hover {
+    background-color: #22414E; 
+}
+
+#header .logo-plattform:hover {
+    opacity: 0.8;
 }
 
 #body-user #header,
 #body-settings #header,
 #body-public #header {
- background-image:linear-gradient(40deg, #0077a4 20%, #258ec9 100%);
+ background-image:linear-gradient(to right, #315F72 0%, #0077a4 50%);
 }
 
-#header .logo-icon-plattform {
-    margin: 6px 0;
+.searchbox input[type='search'] {
+ opacity:0.8;
+}
+
+#header .header-right > div > .menutoggle,
+#header .header-right > form > .menutoggle {
+ opacity:0.8;
 }
 
 div.select2-drop .select2-search input:not(:disabled):not(.primary),
@@ -114,38 +166,4 @@ div[contenteditable=true]:not(:disabled):not(.primary).active,
 .pager li a:not(:disabled):not(.primary).active {
  border-color:#4a4a4a;
  outline:none
-}
-
-
-@font-face {
-    font-family: 'Brandon Grotesque';
-    font-style: normal;
-    font-weight: normal;
-    src: url('./../css/fonts/brandon/brandongrotesque.otf');
-}
-@font-face {
-    font-family: 'Brandon Text';
-    font-style: normal;
-    font-weight: normal;
-    src: url('./../css/fonts/brandon/brandon-text-regular.ttf') format('truetype');
-}
-@font-face {
-    font-family: 'Brandon Text';
-    font-style: italic;
-    font-weight: normal;
-    src: url('./../css/fonts/brandon/brandon-text-italic.ttf') format('truetype');
-}
-@font-face {
-    font-family: 'Brandon Text';
-    font-style: normal;
-    font-weight: bold;
-    src: url('./../css/fonts/brandon/brandon-text-bold.ttf') format('truetype');
-}
-
-body {
-    font-family: 'Brandon Text', -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;;
-}
-
-#contactsmenu {
-    display: none;
 }
