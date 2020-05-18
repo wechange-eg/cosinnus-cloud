@@ -30,6 +30,12 @@ body {
 #contactsmenu {
     display: none;
 }
+.settings-menu.menu li[data-id="firstrunwizard-about"] {
+    display: none;
+}
+.info-nav-button img path {
+    fill: #FFFFFF;
+}
 
 /* use logos from theme */
 #header .logo,

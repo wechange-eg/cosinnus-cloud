@@ -39,7 +39,18 @@
                         url: baseUrl + '/logout/',
                         async: false
                     });
-                });              
+                });
+                $('.info-nav-button').click(function(event){
+                    event.stopPropagation();
+                    event.preventDefault();
+                    OCP.Loader.loadScript('firstrunwizard', 'firstrunwizard.js').then(function () {
+                        OCA.FirstRunWizard.open(false);
+                        OC.hideMenus(function () {
+                            return false;
+                        });
+                    });
+                    return true;
+                });            
             });
         </script>
     </head>
@@ -136,6 +147,14 @@
                     <div id="contactsmenu-menu" class="menu"
                         aria-label="<?php p($l->t('Contacts menu'));?>"></div>
                 </div>
+                
+                <div class="info-nav-button">
+                    <div tabindex="0" role="button" aria-label="Info"
+                        aria-haspopup="true" class="notifications-button menutoggle">
+                            <img alt="Info" src="<?php print_unescaped(\OC::$server->getConfig()->getSystemValue('wechange_nc_root', '/')); ?>/apps/firstrunwizard/img/app.svg">
+                     </div>
+                </div>
+                
                 <div id="settings">
                     <div id="expand" tabindex="0" role="button" class="menutoggle"
                         aria-label="<?php p($l->t('Settings'));?>"
