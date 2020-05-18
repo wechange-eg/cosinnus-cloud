@@ -3,7 +3,7 @@
 </p>
 
 <p>
-    Gruppen und Projekten stehen jeweils maximal 1 GB zur Verfügung. Jeder Nutzerin hat davon unabhängig 100 MB privaten Speicherplatz - im Startfenster der n-Cloud könnt ihr euch einfach einen privaten Ordner anlegen. Benötigt ihr mehr Speicherplatz, schreibt an 
+    Gruppen und Projekten stehen jeweils maximal 1 GB zur Verfügung. Jeder Nutzer*in hat davon unabhängig 100 MB privaten Speicherplatz - im Startfenster der n-Cloud könnt ihr euch einfach einen privaten Ordner anlegen. Benötigt ihr mehr Speicherplatz, schreibt an 
     <a href="mailto:plattform@netzwerk-n.org" target="_blank" rel="noreferrer noopener">plattform@netzwerk-n.org</a>.
 </p>
 <p>
