@@ -202,7 +202,7 @@ def create_group_folder(name: str, group_id: str, group, raise_on_existing_name=
     )
     
     # if a group folder with that name exists already in the NC, do nothing, as this is already our target folder
-    same_name_entries = [folder for folder in response.data.values() if folder['mount_point'] == name]
+    same_name_entries = [] if not response.data else [folder for folder in response.data.values() if folder['mount_point'] == name]
     if len(same_name_entries) > 0:
         # we do however, check if the folder id is set in the cosinnus group!
         if not group.nextcloud_groupfolder_id:
