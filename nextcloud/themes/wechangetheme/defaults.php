@@ -55,7 +55,7 @@ class OC_Theme {
 	 * @return string slogan
 	 */
 	public function getSlogan() {
-		return '';
+		return 'die Cloud von plattform n';
 	}
 
 	/**
