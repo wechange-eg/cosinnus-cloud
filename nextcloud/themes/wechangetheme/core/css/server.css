@@ -27,12 +27,18 @@ body {
     font-family: 'Brandon Text', -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;;
 }
 
-#contactsmenu {
-    display: none;
-}
+#contactsmenu,
 .settings-menu.menu li[data-id="firstrunwizard-about"] {
     display: none;
 }
+@media (max-width:767px) {
+    #appmenu,
+    .header-left nav,
+    .header-right .notifications {
+        display: none !important;
+    }
+}
+
 .info-nav-button img path {
     fill: #FFFFFF;
 }
