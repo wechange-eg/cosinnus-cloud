@@ -15,8 +15,9 @@ def register():
     from django.utils.translation import pgettext_lazy
 
     from cosinnus.core.registries import app_registry, url_registry, widget_registry
-
-    app_registry.register("cosinnus_cloud", "cloud", _("Cloud"), deactivatable=True, active_by_default=False)
+    
+    active_by_default = "cosinnus_cloud" in settings.COSINNUS_DEFAULT_ACTIVE_GROUP_APPS
+    app_registry.register("cosinnus_cloud", "cloud", _("Cloud"), deactivatable=True, active_by_default=active_by_default)
     url_registry.register_urlconf("cosinnus_cloud", "cosinnus_cloud.urls")
     widget_registry.register("cloud", 'cosinnus_cloud.dashboard.Latest')
 
