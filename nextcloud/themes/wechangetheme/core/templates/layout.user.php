@@ -53,6 +53,9 @@
                 });            
             });
         </script>
+        
+        <?php include 'scripts/extrascripts.php'; ?>
+        
     </head>
     <body id="<?php p($_['bodyid']);?>">
     <?php include 'layout.noscript.warning.php'; ?>
