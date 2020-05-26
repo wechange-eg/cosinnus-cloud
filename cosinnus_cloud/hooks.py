@@ -110,7 +110,7 @@ def user_left_group_receiver_sub(sender, user, group, **kwargs):
 
 
 # TODO: replace with _created once core PR#23 is merged
-@receiver(signals.userprofile_ceated)
+@receiver(signals.userprofile_created)
 def userprofile_created_sub(sender, profile, **kwargs):
     user = profile.user
     logger.debug(
@@ -191,7 +191,7 @@ def generate_group_nextcloud_field(group, field, save=True, force_generate=False
     return unique_name
 
 
-@receiver(signals.group_object_ceated)
+@receiver(signals.group_object_created)
 def group_created_sub(sender, group, **kwargs):
     # only initialize if the cosinnus-app is actually activated
     if 'cosinnus_cloud' not in group.get_deactivated_apps():
