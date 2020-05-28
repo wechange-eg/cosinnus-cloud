@@ -279,7 +279,7 @@ def rename_group_and_group_folder(folder_id: int, new_name: str) -> None:
 
 
     
-def files_search(folder_name=None, timeout=5, order_by_last_modified=False):
+def files_search(folder_name=None, timeout=settings.COSINNUS_CLOUD_NEXTCLOUD_REQUEST_TIMEOUT, order_by_last_modified=False):
     """ Webdav request that lists all files in order by last modified date for all files from the root of
         the admin user, or from a specified folder.
         @param order_by_last_modified:  should the webdav API sort results by last modified?
