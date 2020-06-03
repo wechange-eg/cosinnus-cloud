@@ -37,7 +37,10 @@
                     var baseUrl = '<?php print_unescaped(\OC::$server->getConfig()->getSystemValue('wechange_plattform_root', '/')); ?>';
                     $.ajax({
                         url: baseUrl + '/logout/',
-                        async: false
+                        async: false,
+                        xhrFields: {
+                            withCredentials: true
+                        }
                     });
                 });
                 $('.info-nav-button').click(function(event){
