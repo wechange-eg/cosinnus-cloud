@@ -14,7 +14,7 @@ from cosinnus.core.middleware.cosinnus_middleware import (
 from django.contrib.auth import get_user_model
 from cosinnus_cloud.hooks import create_user_from_obj
 from cosinnus_cloud.utils.nextcloud import OCSException
-from cosinnus.utils.user import filter_active_users
+from cosinnus.utils.user import filter_active_users, filter_portal_users
 
 
 logger = logging.getLogger("cosinnus")
@@ -32,7 +32,7 @@ class Command(BaseCommand):
             counter = 0
             created = 0
             errors = 0
-            all_users = filter_active_users(get_user_model().objects.all())
+            all_users = filter_active_users(filter_portal_users(get_user_model().objects.all()))
             
             # TODO: search nextcloud for all exiting user IDs!
             non_existant_users = all_users
