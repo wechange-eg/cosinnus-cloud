@@ -434,3 +434,60 @@ def parse_cloud_files_search_response(response_text, path_filter=None, user=None
                 )
             )
     return cloud_file_list
+
+
+def create_social_login_apps():
+    """ Creates a Nextcloud sociallogin client app, and then creates a corresponding django oauth toolkit
+        provider app using the same client id and secret. Both apps will be given the proper URL paths.
+        This is safe to call multiple times, although subsequent calls will generate and use a different
+        client id and secret. """
+    
+    with requests.Session() as session:
+        get_response = session.get(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/settings/admin/sociallogin",
+            headers=HEADERS,
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+        )
+        if not get_response.status == 200:
+            raise Exception('Nextcloud admin  login request did not return status code 200! %s' % get_response.text)
+        soup = BeautifulSoup(get_response.text, 'xml')
+        try:
+            requesttoken = soup.find("head").attrs.get('data-requesttoken')
+        except:
+            raise Exception("'data-requesttoken' was not found in <head> tag of Nextcloud admin page!")
+        
+        # social login app form data
+        provider_arg = "custom_oauth2_providers[0][%s]"
+        data = {
+            'update_profile_on_login': 1,
+            provider_arg % 'name': 'wechange',
+            provider_arg % 'title': 'wechange',
+            provider_arg % 'apiBaseUrl': 'http://XXXXXXXwechange-dev/o',
+            provider_arg % 'authorizeUrl': 'http://wechange-dev/o/authorize/',
+            provider_arg % 'tokenUrl': 'http://wechange-dev/o/token/',
+            provider_arg % 'profileUrl': 'http://wechange-dev/group/forum/cloud/oauth2/',
+            provider_arg % 'logoutUrl': '',
+            provider_arg % 'clientId': 'foobarX',
+            provider_arg % 'clientSecret': 'barfoo',
+            provider_arg % 'scope': 'read',
+            provider_arg % 'profileFields': '',
+            provider_arg % 'groupsClaim': '',
+            provider_arg % 'style': '',
+            provider_arg % 'defaultGroup': '',
+            provider_arg % 'tg_bot': None,
+            provider_arg % 'tg_token': None,
+            provider_arg % 'tg_group': None,
+        }
+        session_headers = dict(HEADERS)
+        session_headers['requesttoken'] = requesttoken
+        
+        # create social login app
+        post_response = session.post(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/sociallogin/settings/save-admin",
+            headers=session_headers,
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+            data=data,
+        )
+        if not post_response.status == 200:
+            raise Exception('Nextcloud admin sociallogin save request did not return status code 200! %s' % post_response.text)
+        return True
