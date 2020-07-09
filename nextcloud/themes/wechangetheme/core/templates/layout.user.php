@@ -57,7 +57,11 @@
             });
         </script>
         
-        <?php include 'scripts/extrascripts.php'; ?>
+        <?php
+            if (\OC::$server->getConfig()->getSystemValue('wechange_piwik_enabled', false)) {
+                include 'scripts/extrascripts.php'; 
+            }
+        ?>
         
     </head>
     <body id="<?php p($_['bodyid']);?>">
