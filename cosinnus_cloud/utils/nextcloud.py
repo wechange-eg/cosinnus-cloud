@@ -374,6 +374,20 @@ def list_user_group_folders_files(user):
     return file_list
 
 
+def list_all_users():
+    """ Returns a list of all user ids currently existing in nextcloud """
+    response = _response_or_raise(
+        requests.get(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/ocs/v1.php/cloud/users",
+            headers=HEADERS,
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+        )
+    )
+    if response.data and 'users' in response.data:
+        return response.data['users']
+    return []
+
+
 def parse_cloud_files_search_response(response_text, path_filter=None, user=None):
     """ Parses a Webdav endpoint response text into a list of `CloudFile`s
         @param response_text: The requests's response.text
