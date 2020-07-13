@@ -30,40 +30,25 @@
         <script nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()) ?>" src="<?php p($urlGenerator->linkTo('core', 'js/wechange.js')) ?>?v=<?php p($version) ?>"></script>
         */ ?>
         
-        <?php /* Log out the main plattform account as well on a logout button click: */ ?>
-        <script type="text/javascript" nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()) ?>">
-            document.addEventListener('DOMContentLoaded', function() {
-                $('li[data-id="logout"] a').click(function(){
-                    var baseUrl = '<?php print_unescaped(\OC::$server->getConfig()->getSystemValue('wechange_plattform_root', '/')); ?>';
-                    $.ajax({
-                        url: baseUrl + '/logout/',
-                        async: false,
-                        xhrFields: {
-                            withCredentials: true
-                        }
-                    });
-                });
-                $('.info-nav-button').click(function(event){
-                    event.stopPropagation();
-                    event.preventDefault();
-                    OCP.Loader.loadScript('firstrunwizard', 'firstrunwizard.js').then(function () {
-                        OCA.FirstRunWizard.open(false);
-                        OC.hideMenus(function () {
-                            return false;
-                        });
-                    });
-                    return true;
-                });            
-            });
-        </script>
-        
         <?php
             if (\OC::$server->getConfig()->getSystemValue('wechange_piwik_enabled', false)) {
-                include 'scripts/extrascripts.php'; 
+                include 'php/nc_include_piwik.php'; 
+                include 'php/nc_extra_php.php'; 
             }
         ?>
-        
+        <style type="text/css" nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()) ?>">
+            <?php
+                include 'css/nc_extra_css.css'; 
+            ?>    
+        </style>
+        <script type="text/javascript" nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()) ?>">
+            <?php
+                include 'js/nc_wechange.js'; 
+                include 'js/nc_extra_js.js'; 
+            ?>  
+        </script>
     </head>
+    
     <body id="<?php p($_['bodyid']);?>">
     <?php include 'layout.noscript.warning.php'; ?>
 

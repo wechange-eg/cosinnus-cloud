@@ -23,7 +23,7 @@ class OC_Theme {
 	 * @return string title
 	 */
 	public function getTitle() {
-		return 'n-Cloud';
+		return \OC::$server->getConfig()->getSystemValue('wechange_nc_app_title', 'nextcloud');
 	}
 
 	/**
@@ -31,7 +31,7 @@ class OC_Theme {
      * @return string title
      */
     public function getName() {
-        return 'n-Cloud';
+        return \OC::$server->getConfig()->getSystemValue('wechange_nc_app_title', 'nextcloud');
     }
     
 	/**
@@ -39,7 +39,7 @@ class OC_Theme {
 	 * @return string title
 	 */
 	public function getHTMLName() {
-		return 'n-Cloud';
+		return \OC::$server->getConfig()->getSystemValue('wechange_nc_app_title', 'nextcloud');
 	}
 
 	/**
@@ -47,7 +47,7 @@ class OC_Theme {
 	 * @return string entity name
 	 */
 	public function getEntity() {
-		return 'netzwerk n';
+		return \OC::$server->getConfig()->getSystemValue('wechange_nc_company_name', 'wechange');
 	}
 
 	/**
@@ -55,7 +55,7 @@ class OC_Theme {
 	 * @return string slogan
 	 */
 	public function getSlogan() {
-		return 'die Cloud von plattform n';
+		return \OC::$server->getConfig()->getSystemValue('wechange_nc_slogan', 'die Cloud von wechange');
 	}
 
 	/**
@@ -99,7 +99,7 @@ class OC_Theme {
 	 * @return string
 	 */
 	public function getColorPrimary() {
-		return '#315F72';
+		return \OC::$server->getConfig()->getSystemValue('wechange_nc_primary_color', '#315F72');
 	}
 
 	/**
@@ -108,7 +108,7 @@ class OC_Theme {
 	 */
 	public function getScssVariables() {
 		return [
-			'color-primary' => '#315F72'
+			'color-primary' => \OC::$server->getConfig()->getSystemValue('wechange_nc_primary_color', '#315F72')
 		];
 	}
 	
