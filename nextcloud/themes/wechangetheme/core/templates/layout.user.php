@@ -66,7 +66,7 @@
             <div class="header-left">
                 <?php include 'layout.plattform-nav-button.php'; ?>
                 <a id="nextcloud" href="<?php print_unescaped(link_to('', 'index.php')); ?>" title="<?php p($theme->getName()); ?>">
-                    <div class="logo logo-plattform">
+                    <div class="logo logo-navbar">
                         <h1 class="hidden-visually">
                             <?php p($theme->getName()); ?> <?php p(!empty($_['application'])?$_['application']: $l->t('Apps')); ?>
                         </h1>

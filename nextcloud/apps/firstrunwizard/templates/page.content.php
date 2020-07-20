@@ -30,40 +30,6 @@
 
 <div class="page" data-title="<?php p($l->t('A safe home for all your data')); ?>" data-subtitle="">
 	<div class="content content-values">
-        <?php print_unescaped($this->inc('texts/wizard.maintext')); ?>
-        <p>
-            <a href="<?php print_unescaped($this->inc('urls/wizard.learnmore')); ?>" target="_blank" rel="noreferrer noopener">
-                <?php print_unescaped($this->inc('texts/wizard.learnmore')); ?>
-            </a>
-        </p>
-        <br/>
-        
-        <div class="wizard-warning">
-            <h2><?php print_unescaped($this->inc('texts/wizard.warning.header')); ?></h2>
-            <p>
-                <?php print_unescaped($this->inc('texts/wizard.warning.text')); ?>
-            </p>
-        </div>
-        
-        
-        
-        <?php
-        /*
-		<ul id="wizard-values">
-			<li>
-				<span class="icon-link"></span>
-				<h3><?php p($l->t('Host your data and files where you decide')); ?></h3>
-			</li>
-			<li>
-				<span class="icon-shared"></span>
-				<h3><?php p($l->t('Open Standards and Interoperability')); ?></h3>
-			</li>
-			<li>
-				<span class="icon-user"></span>
-				<h3><?php p($l->t('100%% Open Source & community-focused')); ?></h3>
-			</li>
-		</ul>
-        */
-        ?>
+        <?php print_unescaped($this->inc('wechange.page.content')); ?>
 	</div>
 </div>

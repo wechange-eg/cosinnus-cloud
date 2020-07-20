@@ -63,24 +63,10 @@ body {
 #header .logo-exit-icon path {
     fill: #ffffff;
 }
-#header .logo-plattform {
-    background-image: url('../img/logo-plattform.svg') !important; 
+#header .logo-navbar {
+    background-image: url('../img/logo-navbar.png') !important; 
     width: 90px;
 }
-#header .logo-plattform path {
-    fill: #ffffff;
-}
-/* unused
-#header .logo-icon {
-    background-image: url('../img/logo-icon.png') !important;
-    width: 80px;
-}
-#header .logo-icon-plattform {
-    background-image: url('../img/logo-icon-plattform.png') !important; 
-    margin: 5px 0;
-    width: 38px;
-}
-*/
 
 #firstrunwizard .page .content {
     padding: 40px !important;
@@ -101,7 +87,7 @@ body {
 #nextcloud {
     padding-left: 110px;
 }
-#nextcloud-plattform {
+#nextcloud-navbar {
     /* From #nextcloud */
     padding: 7px 0;
     padding-left: 86px;
@@ -115,37 +101,49 @@ body {
 }
 
 
-/* --- Custom portal overwrites --- */
+/* --- Wechange overwrites --- */
 
 
-#nextcloud-plattform {
+#nextcloud-navbar {
     /* our overwrites */
-    background-color: #315f72;
     padding-left:50px;
     border-right: solid 1px #DBDBDB;
 }
 
-#nextcloud-plattform:hover {
-    background-color: #22414E; 
-}
 
-#header .logo-plattform:hover {
+
+#header .logo-navbar:hover {
     opacity: 0.8;
 }
+#header .logo-navbar {
+    background-image: url('../img/logo-navbar.png') !important; 
+    width: 90px;
+}
+#header .logo-navbar path {
+    fill: #ffffff;
+}
 
+
+#nextcloud-navbar {
+    /* our overwrites */
+    background-color: #34b4b5;
+}
+#nextcloud-navbar:hover {
+    background-color: #68c9ca; 
+}
 #body-user #header,
 #body-settings #header,
 #body-public #header {
- background-image:linear-gradient(to right, #315F72 0%, #0077a4 50%);
+    background-image:linear-gradient(to right, #34b4b5 0%, #7bd1d2 50%);
 }
 
 .searchbox input[type='search'] {
- opacity:0.8;
+    opacity:0.8;
 }
 
 #header .header-right > div > .menutoggle,
 #header .header-right > form > .menutoggle {
- opacity:0.8;
+    opacity:0.8;
 }
 
 div.select2-drop .select2-search input:not(:disabled):not(.primary),
@@ -181,6 +179,6 @@ input:not([type='range']):not(:disabled):not(.primary).active,
 textarea:not(:disabled):not(.primary).active,
 div[contenteditable=true]:not(:disabled):not(.primary).active,
 .pager li a:not(:disabled):not(.primary).active {
- border-color:#4a4a4a;
- outline:none
+    border-color:#4a4a4a;
+    outline:none
 }
