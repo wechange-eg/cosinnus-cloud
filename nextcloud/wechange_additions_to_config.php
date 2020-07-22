@@ -6,20 +6,20 @@
   'wechange_plattform_root' => '<root-domain-of-plattform-without-trailing-slash>',
   'wechange_nc_root' => '<root-domain-of-nextcloud-instance-without-trailing-slash>',
   'wechange_csp_domains' => ['wechange.de', '*.wechange.de', '<root-domain-of-plattform-without-trailing-slash>', '*.<root-domain-of-plattform-without-trailing-slash>'],
-  'wechange_piwik_enabled' => true,
-  'wechange_piwik_site_id' => 22,
-  'wechange_nc_app_title' => 'n-Cloud', # cloud title, appears almost everywhere
-  'wechange_nc_company_name' => 'netzwerk n', # name of the portal owners 
-  'wechange_nc_slogan' => 'die Cloud von plattform n', # string slogan
-  'wechange_nc_primary_color' => '#315F72', # hex-color code
+  'wechange_piwik_enabled' => false,
+  'wechange_piwik_site_id' => <piwik-site-id-as-int>,
+  'wechange_nc_app_title' => 'WE-Cloud', # cloud title, appears almost everywhere
+  'wechange_nc_company_name' => 'WECHANGE eG', # name of the portal owners 
+  'wechange_nc_slogan' => 'die Cloud von WECHANGE', # string slogan
+  'wechange_nc_primary_color' => '#34b4b5', # hex-color code
   'wechange_firstrun_main_text' => '
 <p>
-    Die n-Cloud bietet deinem Team eine flexible Dateiablage mit umfangreichen Office-Funktionen, um gemeinsam an Dokumenten, Tabellen und Präsentationen zu arbeiten. Sie basiert auf Nextcloud und OnlyOffice. So stehen dir zwei Apps zur Verfügung, mit denen du die Cloud auch unterwegs nutzen und Dateien mit deinem Desktop-Computer synchronisieren kannst.
+    Die WE-Cloud bietet deinem Team eine flexible Dateiablage mit umfangreichen Office-Funktionen, um gemeinsam an Dokumenten, Tabellen und Präsentationen zu arbeiten. Sie basiert auf Nextcloud und OnlyOffice. So stehen dir zwei Apps zur Verfügung, mit denen du die Cloud auch unterwegs nutzen und Dateien mit deinem Desktop-Computer synchronisieren kannst.
 </p>
 
 <p>
-    Gruppen und Projekten stehen jeweils maximal 1 GB zur Verfügung. Jede*r Nutzer*in hat davon unabhängig 100 MB privaten Speicherplatz - im Startfenster der n-Cloud könnt ihr euch einfach einen privaten Ordner anlegen. Benötigt ihr mehr Speicherplatz, schreibt an 
-    <a href="mailto:plattform@netzwerk-n.org" target="_blank" rel="noreferrer noopener">plattform@netzwerk-n.org</a>.
+    Gruppen und Projekten stehen jeweils maximal 1 GB zur Verfügung. Jede*r Nutzer*in hat davon unabhängig 100 MB privaten Speicherplatz - im Startfenster der WE-Cloud könnt ihr euch einfach einen privaten Ordner anlegen. Benötigt ihr mehr Speicherplatz, schreibt an 
+    <a href="mailto:support@wechange.de" target="_blank" rel="noreferrer noopener">support@wechange.de</a>.
 </p>
 <p>
     Falls ihr eure Dateien mit der Windows-Desktop-App von Nextcloud synchronisieren wollt, bitte beachtet, dass Ordnernamen mit Sonderzeichen (&lt; &gt; : " / \ | ? *) nicht erkannt werden und zuerst bereinigt werden müssen.
