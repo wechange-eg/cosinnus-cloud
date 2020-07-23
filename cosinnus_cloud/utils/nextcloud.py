@@ -13,6 +13,8 @@ import urllib
 from cosinnus_cloud.models import CloudFile
 from cosinnus.utils.group import get_cosinnus_group_model
 from cosinnus_cloud.utils.text import utf8_encode
+from cosinnus.models.group import CosinnusPortal
+from oauth2_provider.models import Application
 
 logger = logging.getLogger("cosinnus")
 
@@ -440,7 +442,14 @@ def create_social_login_apps():
     """ Creates a Nextcloud sociallogin client app, and then creates a corresponding django oauth toolkit
         provider app using the same client id and secret. Both apps will be given the proper URL paths.
         This is safe to call multiple times, although subsequent calls will generate and use a different
-        client id and secret. """
+        client id and secret.
+        @return: True if all apps were created/updated successfully, raises otherwise """
+    
+    portal_domain = CosinnusPortal.get_current().get_domain()
+    client_id = secrets.token_urlsafe(16)
+    client_secret = secrets.token_urlsafe(16)
+    nextcloud_app_name = 'wechange'
+    wechange_app_name = 'nextcloud'
     
     with requests.Session() as session:
         get_response = session.get(
@@ -448,7 +457,7 @@ def create_social_login_apps():
             headers=HEADERS,
             auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
         )
-        if not get_response.status == 200:
+        if not get_response.status_code == 200:
             raise Exception('Nextcloud admin  login request did not return status code 200! %s' % get_response.text)
         soup = BeautifulSoup(get_response.text, 'xml')
         try:
@@ -460,15 +469,15 @@ def create_social_login_apps():
         provider_arg = "custom_oauth2_providers[0][%s]"
         data = {
             'update_profile_on_login': 1,
-            provider_arg % 'name': 'wechange',
-            provider_arg % 'title': 'wechange',
-            provider_arg % 'apiBaseUrl': 'http://XXXXXXXwechange-dev/o',
-            provider_arg % 'authorizeUrl': 'http://wechange-dev/o/authorize/',
-            provider_arg % 'tokenUrl': 'http://wechange-dev/o/token/',
-            provider_arg % 'profileUrl': 'http://wechange-dev/group/forum/cloud/oauth2/',
+            provider_arg % 'name': nextcloud_app_name,
+            provider_arg % 'title': nextcloud_app_name,
+            provider_arg % 'apiBaseUrl': f'{portal_domain}/o',
+            provider_arg % 'authorizeUrl': f'{portal_domain}/o/authorize/',
+            provider_arg % 'tokenUrl': f'{portal_domain}/o/token/',
+            provider_arg % 'profileUrl': f'{portal_domain}/group/forum/cloud/oauth2/',
             provider_arg % 'logoutUrl': '',
-            provider_arg % 'clientId': 'foobarX',
-            provider_arg % 'clientSecret': 'barfoo',
+            provider_arg % 'clientId': client_id,
+            provider_arg % 'clientSecret': client_secret,
             provider_arg % 'scope': 'read',
             provider_arg % 'profileFields': '',
             provider_arg % 'groupsClaim': '',
@@ -488,6 +497,18 @@ def create_social_login_apps():
             auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
             data=data,
         )
-        if not post_response.status == 200:
+        if not post_response.status_code == 200:
             raise Exception('Nextcloud admin sociallogin save request did not return status code 200! %s' % post_response.text)
-        return True
+    
+    # create django oauth toolkit provider app
+    app, __ = Application.objects.get_or_create(name=wechange_app_name)
+    app.client_id = client_id
+    app.client_secret = client_secret
+    app.redirect_uris = f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/sociallogin/custom_oauth2/{nextcloud_app_name}"
+    app.client_type = Application.CLIENT_PUBLIC
+    app.authorization_grant_type = Application.GRANT_AUTHORIZATION_CODE
+    app.skip_authorization = True
+    app.save()
+    
+    return True
+    
