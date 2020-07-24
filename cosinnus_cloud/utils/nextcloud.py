@@ -438,6 +438,23 @@ def parse_cloud_files_search_response(response_text, path_filter=None, user=None
     return cloud_file_list
 
 
+def _get_requesttoken_for_session(session, get_url):
+    """ Gets a Nextcloud CSRF requesttoken for a requests Session """
+    get_response = session.get(
+        f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}{get_url}",
+        headers=HEADERS,
+        auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+    )
+    if not get_response.status_code == 200:
+        raise Exception('Nextcloud admin  login request did not return status code 200! %s' % get_response.text)
+    soup = BeautifulSoup(get_response.text, 'xml')
+    try:
+        requesttoken = soup.find("head").attrs.get('data-requesttoken')
+    except:
+        raise Exception("'data-requesttoken' was not found in <head> tag of Nextcloud admin page!")
+    return requesttoken
+
+
 def create_social_login_apps():
     """ Creates a Nextcloud sociallogin client app, and then creates a corresponding django oauth toolkit
         provider app using the same client id and secret. Both apps will be given the proper URL paths.
@@ -452,19 +469,7 @@ def create_social_login_apps():
     wechange_app_name = 'nextcloud'
     
     with requests.Session() as session:
-        get_response = session.get(
-            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/settings/admin/sociallogin",
-            headers=HEADERS,
-            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
-        )
-        if not get_response.status_code == 200:
-            raise Exception('Nextcloud admin  login request did not return status code 200! %s' % get_response.text)
-        soup = BeautifulSoup(get_response.text, 'xml')
-        try:
-            requesttoken = soup.find("head").attrs.get('data-requesttoken')
-        except:
-            raise Exception("'data-requesttoken' was not found in <head> tag of Nextcloud admin page!")
-        
+        requesttoken = _get_requesttoken_for_session(session, '/settings/admin/sociallogin')
         # social login app form data
         provider_arg = "custom_oauth2_providers[0][%s]"
         data = {
@@ -511,4 +516,88 @@ def create_social_login_apps():
     app.save()
     
     return True
+
+
+def _make_ocs_call(relative_url, post_data={}, headers=HEADERS, session=None, print_to_console=False):
+    """ Fires a (blocking) OCS POST to a given URL with given POST data.
+        @param relative_url: relative API endpoint URL, without domain, with leading slash
+        @return: True if successful, False if not. """
+    try:
+        client = session or requests
+        if print_to_console:
+            print(f'Applying setting > {relative_url} -> {post_data}... ', end='')
+        response = client.post(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}{relative_url}",
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+            headers=headers,
+            json=post_data,
+        )
+        if print_to_console:
+            print(response.status_code)
+        return response.status_code == 200
+    except OCSException as e:
+        message = f'Nextcloud OCS POST call to "{relative_url}" with data {post_data} was not successful. Status code: {e.statuscode}'
+        if print_to_console:
+            print(message)
+        else:
+            logger.warn(message)
+        return False
+    
+
+
+def apply_nextcloud_settings(print_to_console=False):
+    """ Applies configured settings from conf `COSINNUS_CLOUD_NEXTCLOUD_SETTINGS` via OCS """
+    
+    # default user quota
+    _make_ocs_call(
+        '/ocs/v2.php/apps/provisioning_api/api/v1/config/apps/files/default_quota',
+        {'value': settings.COSINNUS_CLOUD_NEXTCLOUD_SETTINGS['DEFAULT_USER_QUOTA']}, 
+        print_to_console=print_to_console
+    )
+    # disable public upload
+    _make_ocs_call(
+        '/ocs/v2.php/apps/provisioning_api/api/v1/config/apps/core/shareapi_allow_public_upload',
+        {'value': settings.COSINNUS_CLOUD_NEXTCLOUD_SETTINGS['ALLOW_PUBLIC_UPLOADS']}, 
+        print_to_console=print_to_console
+    )
+    # disable autocomplete for users
+    _make_ocs_call(
+        '/ocs/v2.php/apps/provisioning_api/api/v1/config/apps/core/shareapi_allow_share_dialog_user_enumeration',
+        {'value': settings.COSINNUS_CLOUD_NEXTCLOUD_SETTINGS['ALLOW_AUTOCOMPLETE_USERS']}, 
+        print_to_console=print_to_console
+    )
+    # send email to new users
+    _make_ocs_call(
+        '/settings/users/preferences/newUser.sendEmail',
+        {'value': settings.COSINNUS_CLOUD_NEXTCLOUD_SETTINGS['SEND_EMAIL_TO_NEW_USERS']}, 
+        print_to_console=print_to_console
+    )
+    
+    
+    # --- Apps Session ---
+    with requests.Session() as session:
+        requesttoken = _get_requesttoken_for_session(session, '/settings/apps')
+        session_headers = dict(HEADERS)
+        session_headers['requesttoken'] = requesttoken
+        
+        # enable apps
+        _make_ocs_call(
+            '/settings/apps/enable',
+            {'appIds': settings.COSINNUS_CLOUD_NEXTCLOUD_SETTINGS['ENABLE_APP_IDS'], 'groups': []},
+            headers=session_headers,
+            session=session,
+            print_to_console=print_to_console
+        )
+        # disable apps
+        _make_ocs_call(
+            '/settings/apps/disable',
+            {'appIds': settings.COSINNUS_CLOUD_NEXTCLOUD_SETTINGS['DISABLE_APP_IDS']},
+            headers=session_headers,
+            session=session,
+            print_to_console=print_to_console
+        )
+    
+    
+    
+    
     
