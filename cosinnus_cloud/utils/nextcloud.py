@@ -471,7 +471,8 @@ def create_social_login_apps():
     with requests.Session() as session:
         requesttoken = _get_requesttoken_for_session(session, '/settings/admin/sociallogin')
         # social login app form data
-        provider_arg = "custom_oauth2_providers[0][%s]"
+        # Note: used to be provider_arg = "custom_oauth2_providers[0][%s]" in a previous version
+        provider_arg = "custom_providers[custom_oauth2][0][%s]"
         data = {
             'update_profile_on_login': 1,
             provider_arg % 'name': nextcloud_app_name,
