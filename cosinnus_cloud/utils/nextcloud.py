@@ -573,7 +573,6 @@ def apply_nextcloud_settings(print_to_console=False):
         print_to_console=print_to_console
     )
     
-    
     # --- Apps Session ---
     with requests.Session() as session:
         requesttoken = _get_requesttoken_for_session(session, '/settings/apps')
@@ -598,6 +597,16 @@ def apply_nextcloud_settings(print_to_console=False):
         )
     
     
+    # onlyoffice settings (TODO)
+    # https://nextcloud.staging.wechange.de/apps/onlyoffice/ajax/settings/address
+    # put request!!
+    """
+    documentserver: https://onlyoffice.<domain>/
+    documentserverInternal: 
+    storageUrl: https://nextcloud.<domain>/
+    secret: 
+    demo: false
+    """ 
     
     
     
