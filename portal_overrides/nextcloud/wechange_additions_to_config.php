@@ -3,6 +3,7 @@
   'default_language' => 'de',
   'default_locale' => 'de',
   'allow_user_to_change_display_name' => false,
+  'overrideprotocol' => 'https',
   'wechange_plattform_root' => '<root-domain-of-plattform-without-trailing-slash>',
   'wechange_nc_root' => '<root-domain-of-nextcloud-instance-without-trailing-slash>',
   'wechange_csp_domains' => ['wechange.de', '*.wechange.de', '<root-domain-of-plattform-without-trailing-slash>', '*.<root-domain-of-plattform-without-trailing-slash>'],
@@ -30,3 +31,4 @@
   'wechange_firstrun_warning_text' => 'Wenn ihr gemeinsam mit OnlyOffice an einer Datei arbeitet, wird diese erst gespeichert und synchronisiert, wenn alle die Datei wieder geschlossen haben. Ungeachtet dessen speichert OnlyOffice die Dateien immer automatisch ab.',
   'wechange_firstrun_learn_more_label' => 'Mehr erfahren',
   'wechange_firstrun_learn_more_url' => 'https://plattform-n.org/n/n-cloud/',
+  
