@@ -511,7 +511,8 @@ def create_social_login_apps():
             raise Exception('Nextcloud admin sociallogin save request did not return status code 200! %s' % post_response.text)
     
     # create django oauth toolkit provider app
-    app, __ = Application.objects.get_or_create(name=wechange_app_name)
+    portal_id = CosinnusPortal.get_current().id
+    app, __ = Application.objects.get_or_create(name=f'{wechange_app_name}{portal_id}')
     app.client_id = client_id
     app.client_secret = client_secret
     app.redirect_uris = f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/sociallogin/custom_oauth2/{nextcloud_app_name}"
