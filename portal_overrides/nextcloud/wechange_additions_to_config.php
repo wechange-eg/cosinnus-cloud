@@ -3,7 +3,7 @@
   'default_language' => 'de',
   'default_locale' => 'de',
   'allow_user_to_change_display_name' => false,
-  'overrideprotocol' => 'https',
+  'overwriteprotocol' => 'https',
   'wechange_plattform_root' => '<root-domain-of-plattform-without-trailing-slash>',
   'wechange_nc_root' => '<root-domain-of-nextcloud-instance-without-trailing-slash>',
   'wechange_csp_domains' => ['wechange.de', '*.wechange.de', '<root-domain-of-plattform-without-trailing-slash>', '*.<root-domain-of-plattform-without-trailing-slash>'],
