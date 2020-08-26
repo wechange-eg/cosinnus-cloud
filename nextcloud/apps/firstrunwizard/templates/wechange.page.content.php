@@ -1,6 +1,6 @@
 <?php print_unescaped(\OC::$server->getConfig()->getSystemValue('wechange_firstrun_main_text', '(wechange_firstrun_main_text)')); ?>
 
-<p>
+<p <?php if (\OC::$server->getConfig()->getSystemValue('wechange_firstrun_learn_more_url', null) == null) {print_unescaped('style="display: none"');} ?>>
     <a href="<?php print_unescaped(\OC::$server->getConfig()->getSystemValue('wechange_firstrun_learn_more_url', 'wechange_firstrun_learn_more_url')); ?>" target="_blank" rel="noreferrer noopener">
         <?php print_unescaped(\OC::$server->getConfig()->getSystemValue('wechange_firstrun_learn_more_label', 'Mehr erfahren')); ?>
     </a>

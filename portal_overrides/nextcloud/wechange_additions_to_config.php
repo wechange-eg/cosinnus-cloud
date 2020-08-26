@@ -30,5 +30,5 @@
   'wechange_firstrun_warning_header' => 'Achtung!',
   'wechange_firstrun_warning_text' => 'Wenn ihr gemeinsam mit OnlyOffice an einer Datei arbeitet, wird diese erst gespeichert und synchronisiert, wenn alle die Datei wieder geschlossen haben. Ungeachtet dessen speichert OnlyOffice die Dateien immer automatisch ab.',
   'wechange_firstrun_learn_more_label' => 'Mehr erfahren',
-  'wechange_firstrun_learn_more_url' => 'https://plattform-n.org/n/n-cloud/',
+  'wechange_firstrun_learn_more_url' => 'https://plattform-n.org/n/n-cloud/', # link will be hidden if this is set to null
   
