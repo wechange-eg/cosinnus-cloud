@@ -2,7 +2,7 @@
 
 {% for cloud_file in cloud_files %}
 	<div class="app-cloud">
-        <div class="btn btn-emphasized w100 {% if not no_indent %}indented"{% endif %}" href="{{ cloud_file.url }}">
+        <div class="btn btn-emphasized w100 {% if not no_indent %}indented"{% endif %}" href="{{ cloud_file.url }}" target="_blank">
             <ul class="media-list fine-space">
                 <li class="media">
                     <a class="pull-left" href="#">
@@ -15,7 +15,7 @@
                     {% endif %}
                     <div class="media-body no-vertical-padding ">
                         <strong>
-                            <a href="{{ cloud_file.url }}">
+                            <a href="{{ cloud_file.url }}" target="_blank">
 	                            {{ cloud_file.title }}
 	                        </a>
                         </strong>
