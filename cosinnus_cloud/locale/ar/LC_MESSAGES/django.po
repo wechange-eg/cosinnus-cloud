@@ -3,40 +3,39 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-08-27 09:46+0200\n"
-"PO-Revision-Date: 2020-09-29 17:51+0100\n"
-"Language: ar\n"
+"POT-Creation-Date: 2020-10-06 16:06+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
-"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
-"Last-Translator: \n"
-"Language-Team: \n"
-"X-Generator: Poedit 1.5.4\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
 msgid "Cloud"
-msgstr "كلاود"
+msgstr ""
 
 msgctxt "the_app"
 msgid "cloud"
-msgstr "تطبيق _ كلاود"
+msgstr ""
 
 msgid "Latest Cloud files"
-msgstr "جديد ملفات (كلاود)"
+msgstr ""
 
 msgid "No cloud files yet"
-msgstr "لا يوجد ملفات كلاود بعد"
+msgstr ""
 
 msgid "Cloud Stub"
-msgstr "ملفات كلاود"
+msgstr ""
 
 msgid "There are no cloud files yet"
-msgstr "لا يوجد أية ملفات كلاود حتى الأن"
+msgstr ""
 
 msgid "Cloud Files"
-msgstr "ملفات كلاود"
+msgstr ""
