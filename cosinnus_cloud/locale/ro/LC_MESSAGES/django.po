@@ -3,39 +3,39 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-10-06 16:06+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2020-10-08 13:01+0300\n"
+"Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?2:1));\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"X-Generator: Poedit 2.2.4\n"
 
 msgid "Cloud"
-msgstr ""
+msgstr "Nour"
 
 msgctxt "the_app"
 msgid "cloud"
-msgstr ""
+msgstr "nour"
 
 msgid "Latest Cloud files"
-msgstr ""
+msgstr "Ultimele fișiere din Nour"
 
 msgid "No cloud files yet"
-msgstr ""
+msgstr "Nu există încă fișiere în nour"
 
 msgid "Cloud Stub"
-msgstr ""
+msgstr "Ciot de nor"
 
 msgid "There are no cloud files yet"
-msgstr ""
+msgstr "Nu există încă fișiere în nour"
 
 msgid "Cloud Files"
-msgstr ""
+msgstr "Fișiere în Nour"
