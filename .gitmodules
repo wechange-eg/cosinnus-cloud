@@ -1,0 +1,4 @@
+[submodule "nextcloud/apps/firstrunwizard"]
+	path = nextcloud/apps/firstrunwizard
+	url = https://github.com/wechange-eg/nextcloud-firstrunwizard
+	branch = wechange18
