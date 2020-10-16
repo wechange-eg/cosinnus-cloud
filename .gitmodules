@@ -6,3 +6,7 @@
 	path = nextcloud/custom_apps
 	url = https://github.com/wechange-eg/nextcloud-custom-apps
 	branch = main
+[submodule "nextcloud/themes"]
+	path = nextcloud/themes
+	url = https://github.com/wechange-eg/nextcloud-themes
+	branch = main
