@@ -28,7 +28,7 @@
 ', # first run wizard main text. HTML, can be multiline
   'wechange_firstrun_warning_enabled' => true, # whether to show a warning box in the first run wizard
   'wechange_firstrun_warning_header' => 'Achtung!',
-  'wechange_firstrun_warning_text' => 'Wenn ihr gemeinsam mit OnlyOffice an einer Datei arbeitet, wird diese erst gespeichert und synchronisiert, wenn alle die Datei wieder geschlossen haben. Ungeachtet dessen speichert OnlyOffice die Dateien immer automatisch ab.',
+  'wechange_firstrun_warning_text' => 'Wenn ihr gemeinsam mit OnlyOffice an einer Datei arbeitet, könnt ihr diese jederzeit manuell speichern (Shortcut strg+s), um die Datei zu synchronisieren - so könnt ihr auch später auf vorherige Versionen der Datei zurückgreifen. Ungeachtet dessen speichert OnlyOffice die Dateien regelmäßig automatisch ab.',
   'wechange_firstrun_learn_more_label' => 'Mehr erfahren',
   'wechange_firstrun_learn_more_url' => 'https://plattform-n.org/n/n-cloud/', # link will be hidden if this is set to null
   
