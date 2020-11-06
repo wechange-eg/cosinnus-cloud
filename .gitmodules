@@ -1,0 +1,12 @@
+[submodule "nextcloud/apps/firstrunwizard"]
+	path = nextcloud/apps/firstrunwizard
+	url = https://github.com/wechange-eg/nextcloud-firstrunwizard
+	branch = wechange18
+[submodule "nextcloud/custom_apps"]
+	path = nextcloud/custom_apps
+	url = https://github.com/wechange-eg/nextcloud-custom-apps
+	branch = main
+[submodule "nextcloud/themes"]
+	path = nextcloud/themes
+	url = https://github.com/wechange-eg/nextcloud-themes
+	branch = main
