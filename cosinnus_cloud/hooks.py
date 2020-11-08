@@ -109,7 +109,6 @@ def user_left_group_receiver_sub(sender, user, group, **kwargs):
         )
 
 
-# TODO: replace with _created once core PR#23 is merged
 @receiver(signals.userprofile_created)
 def userprofile_created_sub(sender, profile, **kwargs):
     user = profile.user

@@ -1,8 +1,8 @@
+import json
 import logging
 import secrets
 import string
 
-from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import quote
 from typing import Mapping, Sequence
 
@@ -16,8 +16,11 @@ from cosinnus_cloud.utils.text import utf8_encode
 from cosinnus.models.group import CosinnusPortal
 from oauth2_provider.models import Application
 
+
+
 logger = logging.getLogger("cosinnus")
 
+_session = requests.Session()
 
 class OCSResponse:
     def __init__(self, json):
@@ -529,7 +532,7 @@ def _make_ocs_call(relative_url, post_data={}, headers=HEADERS, session=None, pr
         @param relative_url: relative API endpoint URL, without domain, with leading slash
         @return: True if successful, False if not. """
     try:
-        client = session or requests
+        client = session or _session
         if print_to_console:
             print(f'Applying setting > {relative_url} -> {post_data}... ', end='')
         response = client.post(
@@ -608,11 +611,43 @@ def apply_nextcloud_settings(print_to_console=False):
     # put request!!
     """
     documentserver: https://onlyoffice.<domain>/
-    documentserverInternal: 
+    documentserverInternal: http://oo-ds/
     storageUrl: https://nextcloud.<domain>/
     secret: 
     demo: false
     """ 
     
+
+def perform_fulltext_search(userid: str, query: str, page=1, page_size=20, *, session=None):
+    """
+    Perform a fulltext file search as the given user and return the result.
+    Requires the fulltextsearch_admin-api addon to be installed on the Nextcloud server.
+    """
     
-    
+    search_request = {
+        "author": userid,
+        "providers": "files",
+        "search": query,
+        "page": page,
+        "size": page_size,
+        "options": {
+            "files_within_dir": "",
+            "files_local": "",
+            "files_external": "",
+            "files_group_folder": "",
+            "files_extension": "",
+        }
+    }
+
+    client = session or _session
+
+    response = client.get(
+        f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/fulltextsearch_admin-api/v1/remote",
+        auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+        headers=HEADERS,
+        params={"request": json.dumps(search_request)},
+    )
+
+    response.raise_for_status()
+        
+    return response.json()["result"][0]
