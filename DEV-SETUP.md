@@ -2,6 +2,11 @@
 
 The setup is currently more complex that it needs to be, this will be improved later.
 
+First, make sure you have the submodules:
+```
+$ git submodule update --init
+```
+
 You need:
 
 - Docker-Compose
