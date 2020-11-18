@@ -622,12 +622,16 @@ def perform_fulltext_search(userid: str, query: str, page=1, page_size=20, *, se
     """
     Perform a fulltext file search as the given user and return the result.
     Requires the fulltextsearch_admin-api addon to be installed on the Nextcloud server.
+    To make the search query behave like Haystack does ("foo bar" searches for "foo" AND "bar", instead of "foo" OR "bar"),
+    query words are prepended with a plus.
     """
     
+    anded_query = " ".join(f"+{word}" for word in query.split(" "))
+
     search_request = {
         "author": userid,
         "providers": "files",
-        "search": query,
+        "search": anded_query,
         "page": page,
         "size": page_size,
         "options": {
