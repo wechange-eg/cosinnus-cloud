@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.generic.base import TemplateView, RedirectView
 from rest_framework.views import APIView
 
-import cosinnus_cloud.hooks
+from cosinnus_cloud.hooks import get_nc_user_id
 from cosinnus.utils.urls import group_aware_reverse
 from cosinnus.views.mixins.group import RequireReadMixin
 from cosinnus.models.group import CosinnusGroup
@@ -106,41 +106,39 @@ class CloudFilesContentWidgetView(BasePagedOffsetWidgetView):
     
     
     def get_data(self, **kwargs):
-        dataset = self.get_dataset()
+
         
-        # we do not use timestamps, but instead just simple paging offsets,
-        # because we always get a full set of data, as nextcloud gives it to us
-        page_start = 0
+        # we do not use timestamps, but instead just simple paging offsets
+        # because Elasticsearch gives that to us for free
+        page = 1
         if self.offset_timestamp:
-            page_start = int(self.offset_timestamp)
-        # calculate has_more
-        offset_start = page_start * self.page_size
-        has_more = len(dataset) > (offset_start) + self.page_size
-        # cut off at page start if given
-        dataset = dataset[offset_start:offset_start+self.page_size]
-        
+            page = int(self.offset_timestamp)
+
+        dataset = nextcloud.find_newest_files(get_nc_user_id(self.request.user), page=page, page_size=self.page_size)
+
         items = self.get_items_from_dataset(dataset)
         return {
             'items': items,
             'widget_title': _('Cloud Files'),
-            'has_more': has_more,
-            'offset_timestamp': page_start + 1,
+            'has_more': page*self.page_size < dataset['meta']['total'],
+            'offset_timestamp': page + 1,
         }
     
-    def get_dataset(self):
-        dataset = nextcloud.list_user_group_folders_files(self.request.user)
         return dataset
     
     def get_items_from_dataset(self, dataset):
-        """ Returns a list of converted item data from the queryset """
+        """ Returns a list of converted item data from the ES result"""
         items = []
-        for cloud_file in dataset:
+        for doc in dataset['documents']:
             item = DashboardItem()
             item['icon'] = 'fa-file-text'
-            item['text'] = escape(cloud_file.title)
-            item['subtext'] = escape(cloud_file.root_folder)
+            try:
+                item['text'] = escape(doc['info']['file'])
+                item['subtext'] = escape(doc['info']['dir'])
+            except KeyError:
+                continue
             # cloud_file.download_url for a direct download or cloud_file.url for a link into Nextcloud
-            item['url'] = cloud_file.url  
+            item['url'] = doc['link']
             items.append(item)
         return items
         

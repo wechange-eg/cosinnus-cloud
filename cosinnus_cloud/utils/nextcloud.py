@@ -361,6 +361,7 @@ def list_group_folder_files(groupfolder_name, user=None):
 
 def list_user_group_folders_files(user):
     """ Returns a list of `CloudFile`s from all GroupFolders of a given user """
+    return [CloudFile(title="foo", path="/tmp/foo")]
     try:
         response_text = files_search(order_by_last_modified=True)
     except Exception as e:
@@ -654,4 +655,34 @@ def perform_fulltext_search(userid: str, query: str, page=1, page_size=20, *, se
 
     response.raise_for_status()
         
+    return response.json()["result"][0]
+
+def find_newest_files(userid: str, page=1, page_size=5, *, session=None):
+
+    search_request = {
+        "author": userid,
+        "providers": "files",
+        "empty_search": True,
+        "page": page,
+        "size": page_size,
+        "options": {
+            "files_within_dir": "",
+            "files_local": "",
+            "files_external": "",
+            "files_group_folder": "",
+            "files_extension": "",
+            "sort": [{"mtime": "desc"}],
+        }
+    }
+
+    client = session or _session
+
+    response = client.get(
+        f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/fulltextsearch_admin-api/v1/remote",
+        auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+        headers=HEADERS,
+        params={"request": json.dumps(search_request)},
+    )
+
+    response.raise_for_status()
     return response.json()["result"][0]
