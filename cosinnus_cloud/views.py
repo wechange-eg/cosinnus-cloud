@@ -114,7 +114,7 @@ class CloudFilesContentWidgetView(BasePagedOffsetWidgetView):
         if self.offset_timestamp:
             page = int(self.offset_timestamp)
 
-        dataset = nextcloud.find_newest_files(get_nc_user_id(self.request.user), page=page, page_size=self.page_size)
+        dataset = nextcloud.find_newest_files(userid=get_nc_user_id(self.request.user), page=page, page_size=self.page_size)
 
         items = self.get_items_from_dataset(dataset)
         return {
@@ -138,7 +138,7 @@ class CloudFilesContentWidgetView(BasePagedOffsetWidgetView):
             except KeyError:
                 continue
             # cloud_file.download_url for a direct download or cloud_file.url for a link into Nextcloud
-            item['url'] = doc['link']
+            item['url'] = f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}{doc['link']}"
             items.append(item)
         return items
         

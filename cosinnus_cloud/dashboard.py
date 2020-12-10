@@ -11,6 +11,7 @@ from cosinnus.models.widget import WidgetConfig
 from cosinnus.utils.urls import group_aware_reverse
 from cosinnus_cloud.models import CloudFile
 from cosinnus_cloud.utils import nextcloud
+from cosinnus_cloud.hooks import get_nc_user_id
 from cosinnus.conf import settings
 
 
@@ -37,17 +38,25 @@ class Latest(DashboardWidget):
         rows = []
         total_count = 0
         newest_group_files = []
-        if not 'cosinnus_cloud' in self.config.group.get_deactivated_apps() and \
-                self.config.group.nextcloud_group_id and self.config.group.nextcloud_groupfolder_name:
-            # get nextcloud file infos for this group folder
-            newest_group_files = nextcloud.list_group_folder_files(self.config.group.nextcloud_groupfolder_name, user=self.request.user)
-            total_count = len(newest_group_files)
-            # paginate list
-            if count != 0:
-                newest_group_files = newest_group_files[offset:offset+count]
-            # wrap in CloudFile object for template
-            rows = newest_group_files
-            
+        if (not 'cosinnus_cloud' in self.config.group.get_deactivated_apps() and 
+                self.config.group.nextcloud_group_id and self.config.group.nextcloud_groupfolder_name):
+            response = nextcloud.find_newest_files(
+                userid=get_nc_user_id(self.request.user), 
+                folder=self.config.group.nextcloud_groupfolder_name,
+                page_size=count,
+                page=offset/count + 1,
+            )
+            total_count = response['meta']['total']
+            rows = [
+                CloudFile(
+                    title=doc['info']['file'],
+                    path=doc['info']['path'],
+                    folder=doc['info']['dir'],
+                    url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}{doc['link']}",
+                    download_url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}remote.php/webdav{doc['info']['path']}"
+                )
+                for doc in response['documents']
+            ]
             
         data = {
             'rows': rows,
@@ -55,7 +64,7 @@ class Latest(DashboardWidget):
             'group': self.config.group,
             'total_count': total_count,
         }
-        return (render_to_string('cosinnus_cloud/widgets/latest.html', data), len(newest_group_files), len(newest_group_files) >= count)
+        return (render_to_string('cosinnus_cloud/widgets/latest.html', data), len(rows), offset+len(rows) < total_count)
     
     
     @property

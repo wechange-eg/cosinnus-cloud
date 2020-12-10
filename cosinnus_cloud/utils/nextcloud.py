@@ -359,26 +359,6 @@ def list_group_folder_files(groupfolder_name, user=None):
     return file_list
 
 
-def list_user_group_folders_files(user):
-    """ Returns a list of `CloudFile`s from all GroupFolders of a given user """
-    return [CloudFile(title="foo", path="/tmp/foo")]
-    try:
-        response_text = files_search(order_by_last_modified=True)
-    except Exception as e:
-        return []
-    
-    # get nextcloud groupfolder ids for user's groups
-    user_groups = get_cosinnus_group_model().objects.get_for_user(user)
-    user_groupfolder_name_list = [urllib.parse.quote(group.nextcloud_groupfolder_name) for group in user_groups if group.nextcloud_groupfolder_name]
-    
-    # post-filter search for the file path starting with a groupfolder that the user is part of
-    file_list = parse_cloud_files_search_response(
-        response_text,
-        path_filter=lambda path: any((path.startswith(f"/{groupfolder}/") for groupfolder in user_groupfolder_name_list)),
-        user=user
-    )
-    return file_list
-
 
 def list_all_users():
     """ Returns a list of all user ids currently existing in nextcloud """
@@ -657,7 +637,7 @@ def perform_fulltext_search(userid: str, query: str, page=1, page_size=20, *, se
         
     return response.json()["result"][0]
 
-def find_newest_files(userid: str, page=1, page_size=5, *, session=None):
+def find_newest_files(userid: str, folder: str = "", page=1, page_size=5, *, session=None):
 
     search_request = {
         "author": userid,
@@ -666,7 +646,7 @@ def find_newest_files(userid: str, page=1, page_size=5, *, session=None):
         "page": page,
         "size": page_size,
         "options": {
-            "files_within_dir": "",
+            "files_within_dir": folder,
             "files_local": "",
             "files_external": "",
             "files_group_folder": "",
