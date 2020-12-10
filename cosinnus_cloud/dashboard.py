@@ -53,7 +53,7 @@ class Latest(DashboardWidget):
                     path=doc['info']['path'],
                     folder=doc['info']['dir'],
                     url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}{doc['link']}",
-                    download_url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}remote.php/webdav{doc['info']['path']}"
+                    download_url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/remote.php/webdav{doc['info']['path']}"
                 )
                 for doc in response['documents']
             ]
