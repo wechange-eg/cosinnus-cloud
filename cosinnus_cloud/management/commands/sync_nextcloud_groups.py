@@ -61,9 +61,10 @@ class Command(BaseCommand):
                     
                     # create group
                     try:
-                        nextcloud.create_group(group.nextcloud_group_id)
-                        created += 1
-                        current_group_created = True
+                        response = nextcloud.create_group(group.nextcloud_group_id)
+                        if response:
+                            created += 1
+                            current_group_created = True
                     except OCSException as e:
                         if not e.statuscode == 102:  # 102: group already exists
                             errors += 1
@@ -77,8 +78,7 @@ class Command(BaseCommand):
                         self.stdout.write("Error (group create): Exception: " + str(e))
                         logger.error("Error (nextcloud group create): Exception: " + str(e), extra={"exc": e})
     
-                    # WARNING: Creating a group folder in a group with an existing one will ERASE the old group folder!
-                    # So never create a group folder on a group that already has one!
+                    # Creating a group folder in a group with an existing one is safe and will not create a new one
                     if current_group_created:
                         # create group folder and save its id
                         try:
