@@ -4,7 +4,7 @@ import secrets
 import string
 
 from urllib.parse import quote
-from typing import Mapping, Sequence
+from typing import Mapping, Optional
 
 import requests
 from cosinnus.conf import settings
@@ -178,7 +178,7 @@ def remove_user_from_group(userid: str, groupid: str) -> OCSResponse:
     )
 
 
-def create_group(groupid: str) -> OCSResponse:
+def create_group(groupid: str) -> Optional[OCSResponse]:
     try:
         return _response_or_raise(
             requests.post(
@@ -197,7 +197,7 @@ def create_group(groupid: str) -> OCSResponse:
 
 def create_group_folder(
     name: str, group_id: str, group, raise_on_existing_name=True
-) -> None:
+) -> Optional[OCSResponse]:
     """Creates a nextcloud groupfolder for the given group, sets its quota, and returns its
     nextcloud DB id."""
     # First, check whether the name is already taken (workaround for bug in groupfolders)
@@ -285,7 +285,7 @@ def create_group_folder(
     return latest_response
 
 
-def rename_group_and_group_folder(folder_id: int, new_name: str) -> None:
+def rename_group_and_group_folder(folder_id: int, new_name: str):
     """ Renames a group folder for a given id (int) """
     response = _response_or_raise(
         requests.post(
