@@ -685,9 +685,65 @@ def perform_fulltext_search(
     return response.json()["result"][0]
 
 
-def find_newest_files(
-    userid: str, folder: str = "", page=1, page_size=5, *, session=None
+def perform_fulltext_search(
+    userid: str, query: str, page=1, page_size=20, *, session=None
 ):
+    """
+    Perform a fulltext file search as the given user and return the result.
+    Requires the fulltextsearch_admin-api addon to be installed on the Nextcloud server.
+    To make the search query behave like Haystack does ("foo bar" searches for "foo" AND "bar", instead of "foo" OR "bar"),
+    query words are prepended with a plus.
+    """
+
+    anded_query = " ".join(f"+{word}" for word in query.split(" "))
+
+    search_request = {
+        "author": userid,
+        "providers": "files",
+        "search": anded_query,
+        "page": page,
+        "size": page_size,
+        # "options": {
+        #     "files_within_dir": "",
+        #     "files_local": "",
+        #     "files_external": "",
+        #     "files_group_folder": "",
+        #     "files_extension": "",
+        # }
+    }
+
+    client = session or _session
+
+    response = client.get(
+        f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/fulltextsearch_admin-api/v1/remote",
+        auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+        headers=HEADERS,
+        params={"request": json.dumps(search_request)},
+    )
+
+    response.raise_for_status()
+
+    return response.json()["result"][0]
+
+
+def find_files(
+    userid: str,
+    folder: str = "",
+    page=1,
+    page_size=5,
+    search_options=None,
+    *,
+    session=None,
+):
+    options = {
+        "files_within_dir": folder,
+        # "files_local": "",
+        # "files_external": "",
+        # "files_group_folder": "",
+        # "files_extension": "",
+    }
+
+    options.update(search_options or {})
 
     search_request = {
         "author": userid,
@@ -695,14 +751,7 @@ def find_newest_files(
         "empty_search": True,
         "page": page,
         "size": page_size,
-        "options": {
-            "files_within_dir": folder,
-            "files_local": "",
-            "files_external": "",
-            "files_group_folder": "",
-            "files_extension": "",
-            "sort": [{"mtime": "desc"}],
-        },
+        "options": options,
     }
 
     client = session or _session
@@ -716,3 +765,20 @@ def find_newest_files(
 
     response.raise_for_status()
     return response.json()["result"][0]
+
+
+def find_newest_files(
+    userid: str, folder: str = "", page=1, page_size=5, *, session=None
+):
+    return find_files(
+        userid,
+        folder,
+        page=page,
+        page_size=page_size,
+        search_options={"sort": [{"mtime": "desc"}]},
+        session=session,
+    )
+
+
+def get_permalink_for_file_id(id: int):
+    return f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/f/{id}"
