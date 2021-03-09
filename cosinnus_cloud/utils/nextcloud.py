@@ -4,13 +4,13 @@ import secrets
 import string
 
 from urllib.parse import quote
-from typing import Mapping, Optional
+from typing import Mapping, Optional, List
 
 import requests
 from cosinnus.conf import settings
 from bs4 import BeautifulSoup
 import urllib
-from cosinnus_cloud.models import CloudFile
+from cosinnus_cloud.models import CloudFile, SimpleCloudFile
 from cosinnus.utils.group import get_cosinnus_group_model
 from cosinnus_cloud.utils.text import utf8_encode
 from cosinnus.models.group import CosinnusPortal
@@ -431,7 +431,7 @@ def parse_cloud_files_search_response(response_text, path_filter=None, user=None
             cloud_file_list.append(
                 CloudFile(
                     title=filename,
-                    url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/f/{file_id}",
+                    url=get_permalink_for_file_id(file_id) if file_id else None,
                     download_url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}{filepath}",
                     type=None,
                     folder=folder_name,
@@ -662,47 +662,6 @@ def perform_fulltext_search(
         "search": anded_query,
         "page": page,
         "size": page_size,
-        "options": {
-            "files_within_dir": "",
-            "files_local": "",
-            "files_external": "",
-            "files_group_folder": "",
-            "files_extension": "",
-        },
-    }
-
-    client = session or _session
-
-    response = client.get(
-        f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/fulltextsearch_admin-api/v1/remote",
-        auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
-        headers=HEADERS,
-        params={"request": json.dumps(search_request)},
-    )
-
-    response.raise_for_status()
-
-    return response.json()["result"][0]
-
-
-def perform_fulltext_search(
-    userid: str, query: str, page=1, page_size=20, *, session=None
-):
-    """
-    Perform a fulltext file search as the given user and return the result.
-    Requires the fulltextsearch_admin-api addon to be installed on the Nextcloud server.
-    To make the search query behave like Haystack does ("foo bar" searches for "foo" AND "bar", instead of "foo" OR "bar"),
-    query words are prepended with a plus.
-    """
-
-    anded_query = " ".join(f"+{word}" for word in query.split(" "))
-
-    search_request = {
-        "author": userid,
-        "providers": "files",
-        "search": anded_query,
-        "page": page,
-        "size": page_size,
         # "options": {
         #     "files_within_dir": "",
         #     "files_local": "",
@@ -729,12 +688,16 @@ def perform_fulltext_search(
 def find_files(
     userid: str,
     folder: str = "",
+    name_query: str = None,
     page=1,
     page_size=5,
+    also_search_content=False,
     search_options=None,
     *,
     session=None,
 ):
+    """Finds files by name, unlike "perform_fulltext_search", by default, this function does only search in the filename, not the content"""
+
     options = {
         "files_within_dir": folder,
         # "files_local": "",
@@ -743,16 +706,25 @@ def find_files(
         # "files_extension": "",
     }
 
+    if not also_search_content:
+         options["search_only"] = ["title"]
+
     options.update(search_options or {})
 
     search_request = {
         "author": userid,
         "providers": "files",
-        "empty_search": True,
         "page": page,
         "size": page_size,
         "options": options,
     }
+
+    if name_query:
+        search_request["search"] = " ".join(
+            f"+{word}" for word in name_query.split(" ")
+        )
+    else:
+        search_request["empty_query"] = True
 
     client = session or _session
 
@@ -768,16 +740,52 @@ def find_files(
 
 
 def find_newest_files(
-    userid: str, folder: str = "", page=1, page_size=5, *, session=None
+    userid: str,
+    folder: str = "",
+    name_query: str = None,
+    page=1,
+    page_size=5,
+    also_search_content=False,
+    *,
+    session=None,
 ):
     return find_files(
-        userid,
-        folder,
+        userid=userid,
+        folder=folder,
+        name_query=name_query,
         page=page,
         page_size=page_size,
+        also_search_content=also_search_content,
         search_options={"sort": [{"mtime": "desc"}]},
         session=session,
     )
+
+
+def get_groupfiles_match_list(
+    userid: str,
+    folder: str = "",
+    name_query: str = None,
+    num_results=20,
+    *,
+    session=None,
+) -> List[SimpleCloudFile]:
+
+    """Convenience function that calls "find_newest_files" and returns a CloudFile object."""
+
+    results = find_newest_files(
+        userid=userid,
+        folder=folder,
+        name_query=name_query,
+        page=1,
+        page_size=num_results,
+        session=session,
+    )
+    return [
+        SimpleCloudFile(
+            id=int(doc["id"]), filename=doc["info"]["file"], dirname=doc["info"]["path"]
+        )
+        for doc in results["documents"]
+    ]
 
 
 def get_permalink_for_file_id(id: int):

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from dataclasses import dataclass
 from cosinnus.conf import settings
 
 class CloudFile(object):
@@ -31,3 +32,11 @@ class CloudFile(object):
             )
         else:
             self.download_url = download_url
+
+
+@dataclass
+class SimpleCloudFile:
+    """Similar to CloudFile, but doesn't provide download links, only id and name"""
+    id: int
+    filename: str
+    dirname: str
