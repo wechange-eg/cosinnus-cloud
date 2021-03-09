@@ -770,7 +770,7 @@ def get_groupfiles_match_list(
     session=None,
 ) -> List[SimpleCloudFile]:
 
-    """Convenience function that calls "find_newest_files" and returns a CloudFile object."""
+    """Convenience function that calls "find_newest_files" and returns a SimpleCloudFile object."""
 
     results = find_newest_files(
         userid=userid,
