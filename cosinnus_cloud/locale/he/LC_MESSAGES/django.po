@@ -3,39 +3,39 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-23 18:24+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2021-03-12 17:55+0100\n"
+"PO-Revision-Date: 2021-03-06 15:08+0200\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: he\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 2.4.2\n"
 
 msgid "Cloud"
-msgstr ""
+msgstr "ענן"
 
 msgctxt "the_app"
 msgid "cloud"
-msgstr ""
+msgstr "ענן מידע"
 
 msgid "Latest Cloud files"
-msgstr ""
+msgstr "קבצי ענן אחרונים"
 
 msgid "No cloud files yet"
-msgstr ""
+msgstr "טרם נוצרו קבצי ענן"
 
 msgid "Cloud Stub"
-msgstr ""
+msgstr "ספח ענן"
 
 msgid "There are no cloud files yet"
-msgstr ""
+msgstr "אין עדיין קבצי ענן"
 
 msgid "Cloud Files"
-msgstr ""
+msgstr "קבצי ענן"
