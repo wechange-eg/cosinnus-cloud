@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from django.http.response import JsonResponse
+from django.http.response import JsonResponse, HttpResponseBadRequest
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.base import TemplateView, RedirectView
 from rest_framework.views import APIView
@@ -19,6 +19,10 @@ from cosinnus.views.user_dashboard import BasePagedOffsetWidgetView
 from cosinnus_cloud.utils import nextcloud
 from cosinnus.models.user_dashboard import DashboardItem
 from django.utils.html import escape
+from cosinnus.utils.permissions import check_ug_membership
+from django.core.exceptions import PermissionDenied
+from django_select2.views import Select2View, NO_ERR_RESP
+from django.template.loader import render_to_string
 
 logger = logging.getLogger("cosinnus")
 
@@ -32,6 +36,57 @@ def get_nextcloud_group_folder_url(group):
     else:
         relative_url = ""
     return settings.COSINNUS_CLOUD_NEXTCLOUD_URL + relative_url
+
+
+    """
+class AttachableObjectSelect2View(RequireReadMixin, Select2View):
+        This view is used as API backend to serve the suggestions for the message recipient field.
+        
+        For each model type use the search terms to both search in the attachable model types 
+        (that is, their configured type aliases (see settings.COSINNUS_ATTACHABLE_OBJECTS_SUGGEST_ALIASES))
+        and their title for good matches.
+        
+        Examples (assumed that 'event' is configured as an alias for [cosinnus_event.Event]: 
+            term: 'even Heilig' would return an [Event] with title 'Heiligabendfeier'
+            term: 'even Heilig' would not find a [File] with title 'Einladung zum Heiligabend'
+            term  'even Heilig' would (!) return a [File] with title 'Invitiation: Heiligabend-Event.pdf'
+    """
+    """
+    def check_all_permissions(self, request, *args, **kwargs):
+        user = request.user 
+        group = self.kwargs.get('group', None)
+        # Check if cloud is enabled for group
+        if not user.is_authenticated or not check_ug_membership(user, group):
+            raise PermissionDenied('User is not a member of this group!')
+        # Check if current user is member of this group
+        if 'cosinnus_cloud' in group.get_deactivated_apps() or \
+                not group.nextcloud_group_id or \
+                not group.nextcloud_groupfolder_name:
+            raise PermissionDenied('Cloud is not enabled for this group!')
+    """
+        
+def get_attachable_cloud_files_results(group, request, term, page):
+    # Check if cloud is enabled for group
+    if 'cosinnus_cloud' in group.get_deactivated_apps() or \
+            not group.nextcloud_group_id or \
+            not group.nextcloud_groupfolder_name:
+        return []
+    simple_cloud_files = query_group_files_for_user(request.user, group, term, page=page)
+    return simple_cloud_files
+
+
+
+def query_group_files_for_user(user, group, name_query, limit=10, page=1):
+    """ Returns a list of `SimpleCloudFile` for a given user and a given group with a given search query.
+        Will NOT do any permission checks (i.e. if the user is a group member) """
+    simple_cloud_files = nextcloud.get_groupfiles_match_list(
+        userid=get_nc_user_id(user), 
+        folder=group.nextcloud_groupfolder_name,
+        name_query=name_query,
+        page=1,
+        page_size=limit,
+    )
+    return simple_cloud_files
 
 
 class CloudIndexView(RequireReadMixin, RedirectView):
