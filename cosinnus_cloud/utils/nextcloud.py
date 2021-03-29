@@ -761,24 +761,6 @@ def find_newest_files(
     )
 
 
-def __XX_STUB__get_groupfiles_match_list(
-    userid: str,
-    folder: str = "",
-    name_query: str = None,
-    page=1,
-    page_size=10,
-    *,
-    session=None,
-) -> List[SimpleCloudFile]:
-    return [
-        SimpleCloudFile(
-            id=23, filename='/HAHA/lol.txt', dirname='/'
-        ),
-        SimpleCloudFile(
-            id=12, filename='/uhu/ha.txt', dirname='/'
-        )
-    ]
-
 def get_groupfiles_match_list(
     userid: str,
     folder: str = "",

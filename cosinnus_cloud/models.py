@@ -58,6 +58,26 @@ class SimpleCloudFile:
         return self.filename
     
 
+def _encode_id_data_str(nextcloud_file_id, filename, path):
+    """ Decodes an id_data_str.
+        Pattern: (id:int)_(filename:ordlistwithdash)_(path:ordlistwithdash) """
+    filename_enc = "-".join([str(ord(char)) for char in filename])
+    path_enc = "-".join([str(ord(char)) for char in path])
+    return f'{nextcloud_file_id}_{filename_enc}_{path_enc}'
+    
+def _decode_id_data_str(id_data_str):
+    """ Encodes an `id_data_str`.
+        Pattern: (id:int)_(filename:ordlistwithdash)_(path:ordlistwithdash) """
+    try:
+        nextcloud_file_id, filename_enc, path_enc = id_data_str.split('_')
+        filename = "".join([chr(int(charcode)) for charcode in filename_enc.split('-')])
+        path = "".join([chr(int(charcode)) for charcode in path_enc.split('-')])
+        return (int(nextcloud_file_id), filename, path)
+    except:
+        if settings.DEBUG:
+            raise
+        return None
+
 
 @python_2_unicode_compatible
 class LinkedCloudFile(BaseTaggableObjectModel):
@@ -71,15 +91,15 @@ class LinkedCloudFile(BaseTaggableObjectModel):
         verbose_name_plural = _('Linked Cloud Files')
     
     @classmethod
-    def get_for_nextcloud_file_id(cls, nextcloud_file_id, group):
+    def get_for_nextcloud_file_id_data_str(cls, id_data_str, group):
         """ Creates or retrieves a LinkedCloudFile for the given nextcloud file id.
             If the file link existed already, the data is re-synced. """
+        nextcloud_file_id = id_data_str.split('_', 1)[0]
         existing_linked_file = get_object_or_None(cls, nextcloud_file_id=nextcloud_file_id)
         linked_file = existing_linked_file or LinkedCloudFile(nextcloud_file_id=nextcloud_file_id, group=group)
         # populate or if existed, refresh from NC
         try:
-            linked_file.sync_from_nextcloud_for_id(linked_file.nextcloud_file_id)
-            linked_file.save()
+            linked_file = linked_file.sync_from_nextcloud_id_data_str(id_data_str)
         except Exception as e:
             # if there was an error retrieving the NC info, we return the existing linked file or nothing
             if settings.DEBUG:
@@ -87,18 +107,24 @@ class LinkedCloudFile(BaseTaggableObjectModel):
             return existing_linked_file or None
         return linked_file
         
-    def sync_from_nextcloud_for_id(self, nextcloud_file_id):
-        """ Stub, this fills the file infos `path` and `url` from nextcloud for the given id.
-            TODO: Requires an API-call!
-            TODO: From the search-endpoint, return a "nc-xxx" id, and and only then do the retrieve loop
-                    to prevent retrieving on a saved ao object! """
-            
+    def sync_from_nextcloud_id_data_str(self, id_data_str):
+        """ So we don't have to run multiple nextcloud API queries for attached files, we encode the 
+            data found on the autocomplete search query as `id_data_str` and pass it through the form on POST. """
+        data_tuple = _decode_id_data_str(id_data_str)
+        if data_tuple is None:
+            return None
+        nextcloud_file_id, filename, path = data_tuple
+        # don't save again if all properties are the same
+        if self.nextcloud_file_id == nextcloud_file_id and self.title == filename and self.path == path:
+            return self
+        
         self.nextcloud_file_id = nextcloud_file_id
-        if not self.title:
-            self.title = 'STUBBED-FILENAME-' + get_random_string(4)
-        self.path = '/STUBBED-PATH/'
+        self.title = filename
+        self.path = path
         from cosinnus_cloud.utils import nextcloud
         self.url = nextcloud.get_permalink_for_file_id(nextcloud_file_id)
+        self.save()
+        return self
     
     def __str__(self):
         return f'LinkedCloudFile (nc-id: {self.nextcloud_file_id})'
@@ -147,7 +173,8 @@ class LinkedCloudFile(BaseTaggableObjectModel):
         # add a prefix to the ID to signify that the ID doesn't belong to the actual model, 
         # but needs to be resolved
         for simple_cloud_file in simple_cloud_files:
-            simple_cloud_file.id = f'_unresolved_{simple_cloud_file.id}'
+            id_data_str = _encode_id_data_str(simple_cloud_file.id, simple_cloud_file.filename, simple_cloud_file.dirname)
+            simple_cloud_file.id = f'_unresolved_{id_data_str}'
         return simple_cloud_files
     
     @classmethod
@@ -155,6 +182,6 @@ class LinkedCloudFile(BaseTaggableObjectModel):
         """ For _unresolved_ IDs of an attachable object, get an attachable object 
             that belongs to that ID (usually an external object's ID is given, and
             we return the local DB object that is attachable and is pointing to it) """
-        return cls.get_for_nextcloud_file_id(object_id, group)
+        return cls.get_for_nextcloud_file_id_data_str(object_id, group)
         
     
