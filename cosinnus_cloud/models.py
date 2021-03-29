@@ -48,7 +48,7 @@ class CloudFile(object):
 @dataclass
 class SimpleCloudFile:
     """Similar to CloudFile, but doesn't provide download links, only id and name"""
-    id: int
+    id: str # an int from NC, but prepended for use in the attached object view
     filename: str
     dirname: str
     
@@ -126,5 +126,35 @@ class LinkedCloudFile(BaseTaggableObjectModel):
             user=request.user if request and request.user and request.user.is_authenticated else None,
         )
     
+    @classmethod
+    def get_attachable_objects_query_results(cls, group, request, term, page=1):
+        """ A droping for `cosinnus.view.attached_object.AttachableObjectSelect2View` to get attachable
+            objects in a non-DB-based query. """
+        # Check if cloud is enabled for group
+        if 'cosinnus_cloud' in group.get_deactivated_apps() or \
+                not group.nextcloud_group_id or \
+                not group.nextcloud_groupfolder_name:
+            return []
+        from cosinnus_cloud.utils import nextcloud
+        from cosinnus_cloud.hooks import get_nc_user_id
+        simple_cloud_files = nextcloud.get_groupfiles_match_list(
+            userid=get_nc_user_id(request.user), 
+            folder=group.nextcloud_groupfolder_name,
+            name_query=term,
+            page=page,
+            page_size=10,
+        )
+        # add a prefix to the ID to signify that the ID doesn't belong to the actual model, 
+        # but needs to be resolved
+        for simple_cloud_file in simple_cloud_files:
+            simple_cloud_file.id = f'_unresolved_{simple_cloud_file.id}'
+        return simple_cloud_files
     
+    @classmethod
+    def resolve_attachable_object_id(cls, object_id, group):
+        """ For _unresolved_ IDs of an attachable object, get an attachable object 
+            that belongs to that ID (usually an external object's ID is given, and
+            we return the local DB object that is attachable and is pointing to it) """
+        return cls.get_for_nextcloud_file_id(object_id, group)
+        
     
