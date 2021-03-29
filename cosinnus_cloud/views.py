@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from django.http.response import JsonResponse
+from django.http.response import JsonResponse, HttpResponseBadRequest
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.base import TemplateView, RedirectView
 from rest_framework.views import APIView
@@ -19,6 +19,10 @@ from cosinnus.views.user_dashboard import BasePagedOffsetWidgetView
 from cosinnus_cloud.utils import nextcloud
 from cosinnus.models.user_dashboard import DashboardItem
 from django.utils.html import escape
+from cosinnus.utils.permissions import check_ug_membership
+from django.core.exceptions import PermissionDenied
+from django_select2.views import Select2View, NO_ERR_RESP
+from django.template.loader import render_to_string
 
 logger = logging.getLogger("cosinnus")
 

@@ -707,7 +707,7 @@ def find_files(
     }
 
     if not also_search_content:
-         options["search_only"] = ["title"]
+        options["search_only"] = ["title"]
 
     options.update(search_options or {})
 
@@ -765,7 +765,8 @@ def get_groupfiles_match_list(
     userid: str,
     folder: str = "",
     name_query: str = None,
-    num_results=20,
+    page=1,
+    page_size=10,
     *,
     session=None,
 ) -> List[SimpleCloudFile]:
@@ -776,8 +777,8 @@ def get_groupfiles_match_list(
         userid=userid,
         folder=folder,
         name_query=name_query,
-        page=1,
-        page_size=num_results,
+        page=page,
+        page_size=page_size,
         session=session,
     )
     return [
