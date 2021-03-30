@@ -724,7 +724,7 @@ def find_files(
             f"+{word}" for word in name_query.split(" ")
         )
     else:
-        search_request["empty_query"] = True
+        search_request["empty_search"] = True
 
     client = session or _session
 
