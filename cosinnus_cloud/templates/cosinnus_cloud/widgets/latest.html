@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% if rows %}
-    {% include 'cosinnus_cloud/attached_cloud_files.html' with cloud_files=rows no_indent=1 %}
+    {% include 'cosinnus_cloud/attached_cloud_files.html' with objects=rows no_indent=1 %}
 {% else %}
 	<div type="button" class="btn btn-emphasized dashboard-appwidget-contentline fine-space">
 	    <ul class="media-list">

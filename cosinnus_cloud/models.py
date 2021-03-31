@@ -144,7 +144,7 @@ class LinkedCloudFile(BaseTaggableObjectModel):
         return CloudFile(
             title=self.title,
             url=self.url,
-            download_url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}{self.path}",
+            download_url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/remote.php/webdav{self.path}",
             type=None,
             folder=self.path,
             root_folder=self.path.split("/")[1],
