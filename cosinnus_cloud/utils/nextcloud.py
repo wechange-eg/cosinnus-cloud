@@ -719,7 +719,8 @@ def find_files(
         "options": options,
     }
 
-    if name_query:
+    if name_query and name_query.strip():
+        name_query = name_query.strip()
         search_request["search"] = " ".join(
             f"+{word}" for word in name_query.split(" ")
         )
