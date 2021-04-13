@@ -135,7 +135,7 @@ class CloudFilesContentWidgetView(BasePagedOffsetWidgetView):
         items = []
         for doc in dataset['documents']:
             item = DashboardItem()
-            item['icon'] = 'fa-file-text'
+            item['icon'] = 'fa-cloud'
             try:
                 item['text'] = escape(doc['info']['file'])
                 item['subtext'] = escape(doc['info']['dir'])
