@@ -20,6 +20,7 @@ from cosinnus_cloud.hooks import (
 from cosinnus_cloud.utils.nextcloud import OCSException
 from cosinnus.utils.group import get_cosinnus_group_model
 from cosinnus_cloud.utils import nextcloud
+from cosinnus.models.group import CosinnusPortal
 
 
 logger = logging.getLogger("cosinnus")
@@ -29,10 +30,15 @@ class Command(BaseCommand):
     help = "Checks all active groups to create any missing nextcloud group membership associations for users"
 
     def handle(self, *args, **options):
+        if not settings.COSINNUS_CONFERENCES_ENABLED:
+            self.stdout.write('COSINNUS_CONFERENCES_ENABLED is not True, aborting.')
+            return 
+        
         try:
             initialize_cosinnus_after_startup()
+            portal = CosinnusPortal.get_current()
             self.stdout.write(
-                "Checking active users and creates any missing group memberships."
+                f"Checking active users and creates any missing group memberships for portal {portal.slug}."
             )
             counter = 0
             errors = 0
