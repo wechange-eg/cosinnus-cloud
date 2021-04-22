@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-30 19:20+0200\n"
+"POT-Creation-Date: 2021-04-22 12:51+0200\n"
 "PO-Revision-Date: 2020-12-14 12:35+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -30,6 +30,22 @@ msgstr "Neueste Cloud-Dateien"
 
 msgid "No cloud files yet"
 msgstr "Es gibt noch keine Cloud-Dateien"
+
+msgid "Path"
+msgstr ""
+
+msgid "URL"
+msgstr ""
+
+#, fuzzy
+#| msgid "Cloud Files"
+msgid "Linked Cloud File"
+msgstr "Cloud-Dateien"
+
+#, fuzzy
+#| msgid "Cloud Files"
+msgid "Linked Cloud Files"
+msgstr "Cloud-Dateien"
 
 msgid "Cloud Stub"
 msgstr "Cloud Stub"

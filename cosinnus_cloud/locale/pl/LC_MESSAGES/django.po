@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-30 19:20+0200\n"
-"PO-Revision-Date: 2020-10-08 11:19+0200\n"
+"POT-Creation-Date: 2021-04-22 12:51+0200\n"
+"PO-Revision-Date: 2021-04-01 16:52+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: pl\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
-"X-Generator: Poedit 2.4.1\n"
+"X-Generator: Poedit 2.4.2\n"
 
 msgid "Cloud"
 msgstr "Chmura"
@@ -30,6 +30,22 @@ msgstr "Najnowsze pliki w chmurze"
 
 msgid "No cloud files yet"
 msgstr "Brak teraz plików w chmurze"
+
+msgid "Path"
+msgstr ""
+
+msgid "URL"
+msgstr ""
+
+#, fuzzy
+#| msgid "Cloud Files"
+msgid "Linked Cloud File"
+msgstr "Pliki w chmurze"
+
+#, fuzzy
+#| msgid "Cloud Files"
+msgid "Linked Cloud Files"
+msgstr "Pliki w chmurze"
 
 msgid "Cloud Stub"
 msgstr "Odcinek chmury"

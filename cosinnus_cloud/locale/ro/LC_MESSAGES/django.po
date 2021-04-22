@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-30 19:20+0200\n"
+"POT-Creation-Date: 2021-04-22 12:51+0200\n"
 "PO-Revision-Date: 2020-10-08 13:01+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -30,6 +30,22 @@ msgstr "Ultimele fișiere din Nour"
 
 msgid "No cloud files yet"
 msgstr "Nu există încă fișiere în nour"
+
+msgid "Path"
+msgstr ""
+
+msgid "URL"
+msgstr ""
+
+#, fuzzy
+#| msgid "Cloud Files"
+msgid "Linked Cloud File"
+msgstr "Fișiere în Nour"
+
+#, fuzzy
+#| msgid "Cloud Files"
+msgid "Linked Cloud Files"
+msgstr "Fișiere în Nour"
 
 msgid "Cloud Stub"
 msgstr "Ciot de nor"
