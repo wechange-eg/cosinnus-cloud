@@ -291,6 +291,14 @@ def user_activated(sender, user, **kwargs):
         get_nc_user_id(user)
     )
 
+@receiver(signals.pre_userprofile_delete)
+def user_deleted(sender, profile, **kwargs):
+    """ Called when a user deletes their account. Completely deletes the user's nextcloud account """
+    submit_with_retry(
+        nextcloud.delete_user, 
+        get_nc_user_id(profile.user)
+    )
+
 @receiver(signals.group_deactivated)
 def group_deactivated(sender, group, **kwargs):
     #logger.warning('Group "%s" was deactivated' % group.slug)
