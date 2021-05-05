@@ -757,7 +757,7 @@ def find_newest_files(
         page=page,
         page_size=page_size,
         also_search_content=also_search_content,
-        search_options={"sort": [{"mtime": "desc"}]},
+        search_options={"sort": [{"mtime": {"order": "desc", "unmapped_type": "long"}}]},
         session=session,
     )
 
