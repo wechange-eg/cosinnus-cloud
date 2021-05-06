@@ -21,6 +21,7 @@ from cosinnus_cloud.utils.nextcloud import OCSException
 from cosinnus.utils.group import get_cosinnus_group_model
 from cosinnus_cloud.utils import nextcloud
 from cosinnus.models.group import CosinnusPortal
+from cosinnus.utils.user import is_user_active
 
 
 logger = logging.getLogger("cosinnus")
@@ -52,7 +53,7 @@ class Command(BaseCommand):
                 if not 'cosinnus_cloud' in group.get_deactivated_apps():
                     
                     # add members to group
-                    nextcloud_user_ids = [get_nc_user_id(member) for member in group.actual_members]
+                    nextcloud_user_ids = [get_nc_user_id(member) for member in group.actual_members if is_user_active(member)]
                     # always add admin to groups
                     nextcloud_user_ids.append(settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME) 
                     for nc_uid in nextcloud_user_ids:
