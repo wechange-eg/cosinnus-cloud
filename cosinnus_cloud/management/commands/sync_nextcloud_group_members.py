@@ -31,8 +31,8 @@ class Command(BaseCommand):
     help = "Checks all active groups to create any missing nextcloud group membership associations for users"
 
     def handle(self, *args, **options):
-        if not settings.COSINNUS_CONFERENCES_ENABLED:
-            self.stdout.write('COSINNUS_CONFERENCES_ENABLED is not True, aborting.')
+        if not settings.COSINNUS_CLOUD_ENABLED:
+            self.stdout.write('COSINNUS_CLOUD_ENABLED is not True, aborting.')
             return 
         
         try:
