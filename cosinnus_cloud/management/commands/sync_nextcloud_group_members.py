@@ -51,9 +51,11 @@ class Command(BaseCommand):
                 counter += 1
                 # only run this for groups that have the cloud app activated
                 if not 'cosinnus_cloud' in group.get_deactivated_apps():
-                    
                     # add members to group
                     nextcloud_user_ids = [get_nc_user_id(member) for member in group.actual_members if is_user_active(member)]
+                    # except for empty groups
+                    if len(nextcloud_user_ids) == 0:
+                        continue
                     # always add admin to groups
                     nextcloud_user_ids.append(settings.COSINNUS_CLOUD_NEXTCLOUD_ADMIN_USERNAME) 
                     for nc_uid in nextcloud_user_ids:
