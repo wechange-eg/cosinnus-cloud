@@ -23,6 +23,7 @@ from cosinnus.utils.permissions import check_ug_membership
 from django.core.exceptions import PermissionDenied
 from django_select2.views import Select2View, NO_ERR_RESP
 from django.template.loader import render_to_string
+from django.utils.encoding import force_text
 
 logger = logging.getLogger("cosinnus")
 
@@ -117,18 +118,27 @@ class CloudFilesContentWidgetView(BasePagedOffsetWidgetView):
         page = 1
         if self.offset_timestamp:
             page = int(self.offset_timestamp)
+        
+        has_more = False
+        had_error = False
+        try:
+            dataset = nextcloud.find_newest_files(userid=get_nc_user_id(self.request.user), page=page, page_size=self.page_size)
+        except Exception as e:
+            logger.exception('An error occured during Nextcloud widget data retrieval! Exception in extra.', extra={'exc_str': force_text(e), 'exception': e})
+            had_error = True
+            
+        if had_error:
+            items = []
+        else:
+            items = self.get_items_from_dataset(dataset)
+            has_more = page*self.page_size < dataset['meta']['total']
 
-        dataset = nextcloud.find_newest_files(userid=get_nc_user_id(self.request.user), page=page, page_size=self.page_size)
-
-        items = self.get_items_from_dataset(dataset)
         return {
             'items': items,
             'widget_title': _('Cloud Files'),
-            'has_more': page*self.page_size < dataset['meta']['total'],
+            'has_more': has_more,
             'offset_timestamp': page + 1,
         }
-    
-        return dataset
     
     def get_items_from_dataset(self, dataset):
         """ Returns a list of converted item data from the ES result"""

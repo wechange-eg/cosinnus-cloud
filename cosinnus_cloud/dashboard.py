@@ -14,6 +14,10 @@ from cosinnus_cloud.utils import nextcloud
 from cosinnus_cloud.hooks import get_nc_user_id
 from cosinnus.conf import settings
 
+import logging
+from django.utils.encoding import force_text
+logger = logging.getLogger('cosinnus')
+
 
 class LatestCloudFilesForm(DashboardWidgetForm):
     amount = forms.IntegerField(label="Amount", initial=5, min_value=0,
@@ -37,29 +41,39 @@ class Latest(DashboardWidget):
         
         rows = []
         total_count = 0
-        newest_group_files = []
+        had_error = False
         if (not 'cosinnus_cloud' in self.config.group.get_deactivated_apps() and 
                 self.config.group.nextcloud_group_id and self.config.group.nextcloud_groupfolder_name):
-            response = nextcloud.find_newest_files(
-                userid=get_nc_user_id(self.request.user), 
-                folder=self.config.group.nextcloud_groupfolder_name,
-                page_size=count,
-                page=offset/count + 1,
-            )
-            total_count = response['meta']['total']
-            rows = [
-                CloudFile(
-                    title=doc['info']['file'],
-                    path=doc['info']['path'],
-                    folder=doc['info']['dir'],
-                    url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}{doc['link']}",
-                    download_url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/remote.php/webdav{doc['info']['path']}"
+            try:
+                response = nextcloud.find_newest_files(
+                    userid=get_nc_user_id(self.request.user), 
+                    folder=self.config.group.nextcloud_groupfolder_name,
+                    page_size=count,
+                    page=offset/count + 1,
                 )
-                for doc in response['documents']
-            ]
+            except Exception as e:
+                logger.exception('An error occured during Nextcloud widget data retrieval! Exception in extra.', extra={'exc_str': force_text(e), 'exception': e})
+                had_error = True
+                
+            if had_error:
+                total_count = ' '
+                rows = []
+            else:
+                total_count = response['meta']['total']
+                rows = [
+                    CloudFile(
+                        title=doc['info']['file'],
+                        path=doc['info']['path'],
+                        folder=doc['info']['dir'],
+                        url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}{doc['link']}",
+                        download_url=f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/remote.php/webdav{doc['info']['path']}"
+                    )
+                    for doc in response['documents']
+                ]
             
         data = {
             'rows': rows,
+            'had_error': had_error,
             'no_data': _('No cloud files yet'),
             'group': self.config.group,
             'total_count': total_count,

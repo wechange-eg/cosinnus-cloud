@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-01 14:44+0200\n"
+"POT-Creation-Date: 2021-10-12 13:19+0200\n"
 "PO-Revision-Date: 2021-03-10 16:11+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -50,6 +50,9 @@ msgstr "Cloudové soubory"
 
 msgid "Cloud Stub"
 msgstr "Cloudový pahýl"
+
+msgid "We could not retrieve file information from Nextcloud at this moment. Click here to view the files directly in the cloud."
+msgstr ""
 
 msgid "There are no cloud files yet"
 msgstr "Zatím nejsou žádné cloudové soubory"

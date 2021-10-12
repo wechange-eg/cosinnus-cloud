@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-01 14:44+0200\n"
+"POT-Creation-Date: 2021-10-12 13:19+0200\n"
 "PO-Revision-Date: 2020-10-08 13:01+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -49,6 +49,9 @@ msgstr "Fișiere în Nour"
 
 msgid "Cloud Stub"
 msgstr "Ciot de nor"
+
+msgid "We could not retrieve file information from Nextcloud at this moment. Click here to view the files directly in the cloud."
+msgstr ""
 
 msgid "There are no cloud files yet"
 msgstr "Nu există încă fișiere în nour"
