@@ -9,7 +9,6 @@ from time import sleep
 from django.dispatch.dispatcher import receiver
 
 from cosinnus.conf import settings
-from cosinnus.models import UserProfile
 from cosinnus.core import signals
 from cosinnus.templatetags.cosinnus_tags import full_name
 
@@ -118,7 +117,11 @@ def userprofile_created_sub(sender, profile, **kwargs):
     )
     submit_with_retry(create_user_from_obj, user)
 
+"""
+# TODO: add this hook after testing it extensively!
+# Also add a check which field should be updated (should only be the name, and only if it changed)
 
+from cosinnus.models import UserProfile
 @receiver(post_save, sender=UserProfile)
 def handle_profile_updated(sender, instance, created, **kwargs):
     # only update active profiles (inactive ones should be disabled in rocketchat also)
@@ -127,7 +130,7 @@ def handle_profile_updated(sender, instance, created, **kwargs):
     if created or not instance.id:
         return
     submit_with_retry(update_user_from_obj, instance.user)
-    
+""" 
 
 def create_user_from_obj(user):
     """ Create a nextcloud user from a django auth User object """
@@ -140,9 +143,13 @@ def create_user_from_obj(user):
 
 def update_user_from_obj(user):
     """ Called when a user updates their account. Updates NC account infos """
-    return nextcloud.update_user( 
+#     ret_one = nextcloud.update_user( 
+#         get_nc_user_id(user),
+#         full_name(user),
+#         get_email_for_user(user),
+#     )
+    return nextcloud.update_user_email( 
         get_nc_user_id(user),
-        full_name(user),
         get_email_for_user(user),
     )
 

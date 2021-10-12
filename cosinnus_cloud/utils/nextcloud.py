@@ -126,10 +126,24 @@ def create_user(userid: str, display_name: str, email: str) -> OCSResponse:
     return _response_or_raise(res)
 
 
-def update_user(userid: str, display_name: str, email: str) -> OCSResponse:
+def update_user_email(userid: str, email: str) -> OCSResponse:
     data = {
-        "displayname": display_name,
-        "email": email,
+        "key": "email",
+        "value": email,
+    }
+    return _response_or_raise(
+        requests.put(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/ocs/v1.php/cloud/users/{quote(userid)}",
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+            headers=HEADERS,
+            data=data,
+        )
+    )
+
+def update_user_name(userid: str, display_name: str) -> OCSResponse:
+    data = {
+        "key": "displayname",
+        "value": display_name,
     }
     return _response_or_raise(
         requests.put(
