@@ -124,7 +124,7 @@ class CloudFilesContentWidgetView(BasePagedOffsetWidgetView):
         try:
             dataset = nextcloud.find_newest_files(userid=get_nc_user_id(self.request.user), page=page, page_size=self.page_size)
         except Exception as e:
-            logger.exception('An error occured during Nextcloud widget data retrieval! Exception in extra.', extra={'exc_str': force_text(e), 'exception': e})
+            logger.error('An error occured during Nextcloud widget data retrieval! Exception in extra.', extra={'exc_str': force_text(e), 'exception': e})
             had_error = True
             
         if had_error:

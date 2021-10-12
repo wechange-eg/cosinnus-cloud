@@ -41,6 +41,7 @@ class Latest(DashboardWidget):
         
         rows = []
         total_count = 0
+        has_more = False
         had_error = False
         if (not 'cosinnus_cloud' in self.config.group.get_deactivated_apps() and 
                 self.config.group.nextcloud_group_id and self.config.group.nextcloud_groupfolder_name):
@@ -52,7 +53,7 @@ class Latest(DashboardWidget):
                     page=offset/count + 1,
                 )
             except Exception as e:
-                logger.exception('An error occured during Nextcloud widget data retrieval! Exception in extra.', extra={'exc_str': force_text(e), 'exception': e})
+                logger.error('An error occured during Nextcloud widget data retrieval! Exception in extra.', extra={'exc_str': force_text(e), 'exception': e})
                 had_error = True
                 
             if had_error:
@@ -60,6 +61,7 @@ class Latest(DashboardWidget):
                 rows = []
             else:
                 total_count = response['meta']['total']
+                has_more = offset+len(rows) < total_count
                 rows = [
                     CloudFile(
                         title=doc['info']['file'],
@@ -78,7 +80,7 @@ class Latest(DashboardWidget):
             'group': self.config.group,
             'total_count': total_count,
         }
-        return (render_to_string('cosinnus_cloud/widgets/latest.html', data), len(rows), offset+len(rows) < total_count)
+        return (render_to_string('cosinnus_cloud/widgets/latest.html', data), len(rows), has_more)
     
     
     @property

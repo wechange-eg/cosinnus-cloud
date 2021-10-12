@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n cosinnus_tags %}
 
 {% if rows %}
     {% include 'cosinnus_cloud/attached_cloud_files.html' with objects=rows no_indent=1 %}
@@ -10,7 +10,7 @@
                     <i class="fa fa-cloud"></i>
                 </a>
                 <div class="media-body">
-                    {% trans "We could not retrieve file information from Nextcloud at this moment. Click here to view the files directly in the cloud." %}
+                    <a>{% trans "We could not retrieve file information from Nextcloud at this moment. Click here to view the files directly in the cloud." %}</a>
                 </div>
             </li>
         </ul>
