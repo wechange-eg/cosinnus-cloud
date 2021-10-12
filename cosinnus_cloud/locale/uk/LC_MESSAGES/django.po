@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-05-14 15:23+0200\n"
+"POT-Creation-Date: 2021-10-01 14:44+0200\n"
 "PO-Revision-Date: 2020-10-14 09:29+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -32,26 +32,22 @@ msgid "No cloud files yet"
 msgstr "Ще немає файлів у хмарі"
 
 msgid "Path"
-msgstr ""
+msgstr "Шлях"
 
 msgid "URL"
-msgstr ""
+msgstr "URL-адреса"
 
-#, fuzzy
-#| msgid "Cloud Files"
 msgid "Linked Cloud File"
-msgstr "Хмарні файли"
+msgstr "Файл у хмарі"
 
-#, fuzzy
-#| msgid "Cloud Files"
 msgid "Linked Cloud Files"
-msgstr "Хмарні файли"
+msgstr "Файли у хмарі"
 
 msgid "Cloud Stub"
-msgstr "Заглушка Хмари"
+msgstr "Частина хмари"
 
 msgid "There are no cloud files yet"
 msgstr "Ще немає файлів у хмарі"
 
 msgid "Cloud Files"
-msgstr "Хмарні файли"
+msgstr "Файли у хмарі"
