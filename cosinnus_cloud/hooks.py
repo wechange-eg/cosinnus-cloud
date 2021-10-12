@@ -9,6 +9,7 @@ from time import sleep
 from django.dispatch.dispatcher import receiver
 
 from cosinnus.conf import settings
+from cosinnus.models import UserProfile
 from cosinnus.core import signals
 from cosinnus.templatetags.cosinnus_tags import full_name
 
@@ -118,14 +119,37 @@ def userprofile_created_sub(sender, profile, **kwargs):
     submit_with_retry(create_user_from_obj, user)
 
 
+@receiver(post_save, sender=UserProfile)
+def handle_profile_updated(sender, instance, created, **kwargs):
+    # only update active profiles (inactive ones should be disabled in rocketchat also)
+    if not instance.user.is_active:
+        return
+    if created or not instance.id:
+        return
+    submit_with_retry(update_user_from_obj, instance.user)
+    
+
 def create_user_from_obj(user):
     """ Create a nextcloud user from a django auth User object """
     return nextcloud.create_user(
         get_nc_user_id(user),
         full_name(user),
-        user.email,
+        get_email_for_user(user),
     )
 
+
+def update_user_from_obj(user):
+    """ Called when a user updates their account. Updates NC account infos """
+    return nextcloud.update_user( 
+        get_nc_user_id(user),
+        full_name(user),
+        get_email_for_user(user),
+    )
+
+def get_email_for_user(user):
+    """ We currently set the user email to None, Nextcloud needs to send no emails anyways
+        and this way it's more secure. """
+    return ''
 
 def generate_group_nextcloud_id(group, save=True, force_generate=False):
     """ See `generate_group_nextcloud_field` """
@@ -298,6 +322,19 @@ def user_deleted(sender, profile, **kwargs):
         nextcloud.delete_user, 
         get_nc_user_id(profile.user)
     )
+    
+"""
+    TODO: we're missing an update-user hook to `nextcloud.update_user`!
+"""
+
+@receiver(signals.userprofile_created)
+def userprofile_created_sub(sender, profile, **kwargs):
+    user = profile.user
+    logger.debug(
+        "User profile created, adding user [%s] to nextcloud ", full_name(user)
+    )
+    submit_with_retry(create_user_from_obj, user)
+
 
 @receiver(signals.group_deactivated)
 def group_deactivated(sender, group, **kwargs):

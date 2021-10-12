@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.generic.base import TemplateView, RedirectView
 from rest_framework.views import APIView
 
-from cosinnus_cloud.hooks import get_nc_user_id
+from cosinnus_cloud.hooks import get_nc_user_id, get_email_for_user
 from cosinnus.utils.urls import group_aware_reverse
 from cosinnus.views.mixins.group import RequireReadMixin
 from cosinnus.models.group import CosinnusGroup
@@ -77,7 +77,7 @@ class OAuthView(APIView):
                 {
                     "success": True,
                     "id": user.id,
-                    "email": user.email,
+                    "email": get_email_for_user(user),
                     "displayName": f"{user.first_name} {user.last_name}",
                     "groups": [
                         group.name for group in CosinnusGroup.objects.get_for_user(user)
