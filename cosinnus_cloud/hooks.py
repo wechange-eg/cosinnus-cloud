@@ -121,6 +121,8 @@ def userprofile_created_sub(sender, profile, **kwargs):
 # TODO: add this hook after testing it extensively!
 # Also add a check which field should be updated (should only be the name, and only if it changed)
 
+# IMPORTANT: Needs to be threaded, because the endpoint is slooooow!
+
 from cosinnus.models import UserProfile
 @receiver(post_save, sender=UserProfile)
 def handle_profile_updated(sender, instance, created, **kwargs):
