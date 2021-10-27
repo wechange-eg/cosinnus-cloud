@@ -74,12 +74,16 @@ class OAuthView(APIView):
     def get(self, request, **kwargs):
         if request.user.is_authenticated:
             user = request.user
+            avatar_url = user.cosinnus_profile.avatar.url if user.cosinnus_profile.avatar else ""
+            if avatar_url:
+                avatar_url = request.build_absolute_uri(avatar_url)
             return JsonResponse(
                 {
                     "success": True,
                     "id": user.id,
                     "email": get_email_for_user(user),
-                    "displayName": f"{user.first_name} {user.last_name}",
+                    "displayName": user.get_full_name(),
+                    "avatar": avatar_url,
                     "groups": [
                         group.name for group in CosinnusGroup.objects.get_for_user(user)
                     ],
