@@ -54,10 +54,10 @@ class Command(BaseCommand):
                     if not group.nextcloud_group_id:
                         generate_group_nextcloud_id(group, save=False)
                         generate_group_nextcloud_groupfolder_name(group, save=False)
-                        group.save(update_fields=['nextcloud_group_id', 'nextcloud_groupfolder_name'])
+                        group.save()
                     if group.nextcloud_group_id and not group.nextcloud_groupfolder_name:
                         group.nextcloud_groupfolder_name = group.nextcloud_group_id
-                        group.save(update_fields=["nextcloud_groupfolder_name"])
+                        group.save()
                     
                     # create group
                     try:
