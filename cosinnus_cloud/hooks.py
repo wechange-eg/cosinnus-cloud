@@ -219,7 +219,7 @@ def generate_group_nextcloud_field(group, field, save=True, force_generate=False
     
     setattr(group, field, unique_name)
     if save == True:
-        group.save(update_fields=[field])
+        group.save()
     return unique_name
 
 
@@ -269,7 +269,7 @@ def rename_nextcloud_groupfolder_on_group_rename(sender, created, **kwargs):
                 # if the rename was successful, save the group. 
                 # otherwise, reload it to discard the newly generated folder name on the object
                 if result is True:
-                    group.save(update_fields=['nextcloud_groupfolder_name'])
+                    group.save()
                     return 
             group.refresh_from_db()
         
@@ -282,7 +282,7 @@ def initialize_nextcloud_for_group(group):
     # generate group and groupfolder name
     generate_group_nextcloud_id(group, save=False)
     generate_group_nextcloud_groupfolder_name(group, save=False)
-    group.save(update_fields=['nextcloud_group_id', 'nextcloud_groupfolder_name'])
+    group.save()
     
     logger.debug(
         "Creating new group [%s] in Nextcloud (wechange group name [%s])",
