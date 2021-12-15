@@ -82,7 +82,7 @@ class OAuthView(APIView):
                     "success": True,
                     "id": user.id,
                     "email": get_email_for_user(user),
-                    "displayName": user.get_full_name(),
+                    "displayName": user.cosinnus_profile.get_external_full_name(),
                     "avatar": avatar_url,
                     "groups": [
                         group.name for group in CosinnusGroup.objects.get_for_user(user)

@@ -10,7 +10,6 @@ from django.dispatch.dispatcher import receiver
 
 from cosinnus.conf import settings
 from cosinnus.core import signals
-from cosinnus.templatetags.cosinnus_tags import full_name
 
 from .utils import nextcloud
 import re
@@ -19,11 +18,17 @@ from cosinnus.utils.group import get_cosinnus_group_model
 from django.db.models.signals import post_save
 from cosinnus_cloud.utils.nextcloud import rename_group_and_group_folder
 from cosinnus.models.group_extra import CosinnusProject, CosinnusSociety
+from cosinnus.utils.user import is_user_active
+from threading import Thread
 
 logger = logging.getLogger("cosinnus")
 
 
 executor = ThreadPoolExecutor(max_workers=64, thread_name_prefix="nextcloud-req-")
+
+
+def get_user_display_name(user):
+    return user and hasattr(user, 'cosinnus_profile') and user.cosinnus_profile.get_external_full_name() or '(UNK)'
 
 
 def submit_with_retry(fn, *args, **kwargs):
@@ -82,7 +87,7 @@ def user_joined_group_receiver_sub(sender, user, group, **kwargs):
         if group.nextcloud_group_id is not None:
             logger.debug(
                 "User [%s] joined group [%s], adding him/her to Nextcloud",
-                full_name(user),
+                get_user_display_name(user),
                 group.name,
             )
             submit_with_retry(
@@ -99,7 +104,7 @@ def user_left_group_receiver_sub(sender, user, group, **kwargs):
     if group.nextcloud_group_id is not None:
         logger.debug(
             "User [%s] left group [%s], removing him from Nextcloud",
-            full_name(user),
+            get_user_display_name(user),
             group.name,
         )
         submit_with_retry(
@@ -113,43 +118,58 @@ def user_left_group_receiver_sub(sender, user, group, **kwargs):
 def userprofile_created_sub(sender, profile, **kwargs):
     user = profile.user
     logger.debug(
-        "User profile created, adding user [%s] to nextcloud ", full_name(user)
+        "User profile created, adding user [%s] to nextcloud ", get_user_display_name(user)
     )
     submit_with_retry(create_user_from_obj, user)
 
-"""
-# TODO: add this hook after testing it extensively!
-# Also add a check which field should be updated (should only be the name, and only if it changed)
-
-# IMPORTANT: Needs to be threaded, because the endpoint is slooooow!
 
 from cosinnus.models import UserProfile
 @receiver(post_save, sender=UserProfile)
 def handle_profile_updated(sender, instance, created, **kwargs):
-    # only update active profiles (inactive ones should be disabled in rocketchat also)
-    if not instance.user.is_active:
-        return
+    """
+    # TODO: add a check which field should be updated (should only be the name, and only if it changed)
+    
+    # IMPORTANT: Needs to be threaded, because the endpoint is slooooow!
+    """ 
+    # only update active profiles 
     if created or not instance.id:
         return
-    submit_with_retry(update_user_from_obj, instance.user)
-""" 
+    user = instance.user
+    if not is_user_active(user):
+        return
+    # run the update threaded because it is a very slow endpoint
+    class UpdateNCUserThread(Thread):
+        def run(self):
+            try:
+                # we should actually use `update_user_from_obj`, but since
+                # the only field really updateable is the username (email is empty for now),
+                # we just use the direct method. and we don't submit_with_retry either,
+                # because if we fail this, we fail it
+                #submit_with_retry(update_user_from_obj, instance.user)
+                nextcloud.update_user_name( 
+                    get_nc_user_id(user),
+                    get_user_display_name(user),
+                )
+            except Exception as e:
+                logger.warning('Could not update Nextcloud user on profile update.', extra={'exc': e})
+    UpdateNCUserThread().start()
+
 
 def create_user_from_obj(user):
     """ Create a nextcloud user from a django auth User object """
     return nextcloud.create_user(
         get_nc_user_id(user),
-        full_name(user),
+        get_user_display_name(user),
         get_email_for_user(user),
     )
 
-
 def update_user_from_obj(user):
-    """ Called when a user updates their account. Updates NC account infos """
-#     ret_one = nextcloud.update_user( 
-#         get_nc_user_id(user),
-#         full_name(user),
-#         get_email_for_user(user),
-#     )
+    """ Called when a user updates their account. Updates NC account infos.
+        Beware, this is a really slow endpoint! """
+    nextcloud.update_user_name( 
+        get_nc_user_id(user),
+        get_user_display_name(user),
+    )
     return nextcloud.update_user_email( 
         get_nc_user_id(user),
         get_email_for_user(user),
@@ -340,7 +360,7 @@ def user_deleted(sender, profile, **kwargs):
 def userprofile_created_sub(sender, profile, **kwargs):
     user = profile.user
     logger.debug(
-        "User profile created, adding user [%s] to nextcloud ", full_name(user)
+        "User profile created, adding user [%s] to nextcloud ", get_user_display_name(user)
     )
     submit_with_retry(create_user_from_obj, user)
 
