@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from annoying.functions import get_object_or_None
 from dataclasses import dataclass
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+import six
 
 from cosinnus.conf import settings
 from cosinnus.models.tagged import BaseTaggableObjectModel
-from annoying.functions import get_object_or_None
-from django.utils.crypto import get_random_string
 
 
 class CloudFile(object):
@@ -79,7 +78,7 @@ def _decode_id_data_str(id_data_str):
         return None
 
 
-@python_2_unicode_compatible
+@six.python_2_unicode_compatible
 class LinkedCloudFile(BaseTaggableObjectModel):
 
     nextcloud_file_id = models.IntegerField('Nextcloud File ID', unique=True, blank=False, null=False)
