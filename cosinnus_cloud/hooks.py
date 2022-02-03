@@ -19,6 +19,7 @@ from cosinnus.utils.group import get_cosinnus_group_model
 from django.db.models.signals import post_save
 from cosinnus_cloud.utils.nextcloud import rename_group_and_group_folder
 from cosinnus.models.group_extra import CosinnusProject, CosinnusSociety
+from django.db.utils import DatabaseError
 
 logger = logging.getLogger("cosinnus")
 
@@ -282,7 +283,14 @@ def initialize_nextcloud_for_group(group):
     # generate group and groupfolder name
     generate_group_nextcloud_id(group, save=False)
     generate_group_nextcloud_groupfolder_name(group, save=False)
-    group.save()
+    try:
+        # we need to only update these fields, as otherwise we could get save conflicts
+        # if this method is called during group creation (m2m race conditions)
+        group.save(update_fields=['nextcloud_group_id', 'nextcloud_groupfolder_name'])
+    except DatabaseError as e:
+        # we ignore save errors if the field values were unchanged
+        if not 'did not affect any rows' in str(e):
+            raise
     
     logger.debug(
         "Creating new group [%s] in Nextcloud (wechange group name [%s])",
