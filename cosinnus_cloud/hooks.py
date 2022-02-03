@@ -269,10 +269,12 @@ def group_cloud_app_activated_sub(sender, group, apps, **kwargs):
                 # because that listener is always active
         submit_with_retry(_conurrent_wrap)
 
+
 @receiver(signals.group_apps_deactivated)
 def group_cloud_app_deactivated_sub(sender, group, apps, **kwargs):
-    #logger.warn('DEact apps: %s' % str(apps))
-    pass
+    # note: cannot use `is_cloud_enabled_for_group(group)` here, as it would fail since the app is already deactivated
+    if 'cosinnus_cloud' in apps and settings.COSINNUS_CLOUD_ENABLED:
+        disable_group_folder_for_group(group)
 
 
 def rename_nextcloud_groupfolder_on_group_rename(sender, created, **kwargs):
@@ -301,9 +303,12 @@ post_save.connect(rename_nextcloud_groupfolder_on_group_rename, sender=CosinnusS
 
     
 def initialize_nextcloud_for_group(group):
+    """ Initializes a nextcloud groupfolder for a group.
+        Safe to call on already initialized folders. If called on a pre-existing folder that is 
+        "disabled" (group has no more access to it), the group's access will be re-enabled for the folder. """
     if not is_cloud_enabled_for_group(group):
         return
-    # generate group and groupfolder name
+    # generate group and groupfolder name if the group doesn't have one yet, or use the existing one
     generate_group_nextcloud_id(group, save=False)
     generate_group_nextcloud_groupfolder_name(group, save=False)
     try:
@@ -320,7 +325,7 @@ def initialize_nextcloud_for_group(group):
         group.nextcloud_groupfolder_name,
         group.nextcloud_group_id,
     )
-
+    
     # create nextcloud group
     nextcloud.create_group(group.nextcloud_group_id)
     # create nextcloud group folder
@@ -367,21 +372,42 @@ def user_deleted(sender, profile, **kwargs):
     TODO: we're missing an update-user hook to `nextcloud.update_user`!
 """
 
-@receiver(signals.userprofile_created)
-def userprofile_created_sub(sender, profile, **kwargs):
-    user = profile.user
-    logger.debug(
-        "User profile created, adding user [%s] to nextcloud ", get_user_display_name(user)
-    )
-    submit_with_retry(create_user_from_obj, user)
-
 
 @receiver(signals.group_deactivated)
 def group_deactivated(sender, group, **kwargs):
-    #logger.warning('Group "%s" was deactivated' % group.slug)
-    pass
+    if not is_cloud_enabled_for_group(group):
+        return
+    disable_group_folder_for_group(group)
+
 
 @receiver(signals.group_reactivated)
 def group_reactivated(sender, group, **kwargs):
-    #logger.warning('Group "%s" was reactivated' % group.slug)
-    pass
+    if not is_cloud_enabled_for_group(group):
+        return
+    enable_group_folder_for_group(group)
+
+    
+def disable_group_folder_for_group(group):
+    """ For lack of a better way through the API, this 
+        'disables' a group folder for a CosinnusGroup by removing the nextcloud group's access
+        to the group folder, when a CosinnusGroup is deactivated """
+    if group.nextcloud_group_id and group.nextcloud_groupfolder_id:
+        submit_with_retry(
+            nextcloud.remove_group_access_for_folder, 
+            group.nextcloud_group_id,
+            group.nextcloud_groupfolder_id
+        )
+
+def enable_group_folder_for_group(group):
+    """ For lack of a better way through the API, this 
+        'enables' a group folder for a CosinnusGroup by removing the nextcloud group's access
+        to the group folder, when a CosinnusGroup is deactivated """
+    if group.nextcloud_group_id and group.nextcloud_groupfolder_id:
+        submit_with_retry(
+            nextcloud.add_group_access_for_folder, 
+            group.nextcloud_group_id,
+            group.nextcloud_groupfolder_id
+        )
+
+
+

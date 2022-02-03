@@ -237,7 +237,7 @@ def create_group_folder(
             auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
         )
     )
-
+    
     # if a group folder with that name exists already in the NC, do nothing, as this is already our target folder
     same_name_entries = (
         []
@@ -259,8 +259,10 @@ def create_group_folder(
             raise ValueError("A groupfolder with that name already exists")
         else:
             logger.info("group folder [%s] already exists, doing nothing", name)
+            # doing nothing except making sure the group has access to the folder
+            add_group_access_for_folder(group_id, group.nextcloud_groupfolder_id)
             return
-
+        
     # create groupfolder
     response = _response_or_raise(
         requests.post(
@@ -270,7 +272,7 @@ def create_group_folder(
             data={"mountpoint": name},
         )
     )
-
+    
     # save the groupfolder id (not the name,
     # that has been saved at group id generation time in `generate_group_nextcloud_groupfolder_name`)
     folder_id = response.data["id"]
@@ -285,16 +287,9 @@ def create_group_folder(
                 "folder_id": folder_id,
             },
         )
-
+        
     # assign our group access to the groupfolder
-    latest_response = _response_or_raise(
-        requests.post(
-            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders/{folder_id}/groups",
-            headers=HEADERS,
-            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
-            data={"group": group_id},
-        )
-    )
+    add_group_access_for_folder(group_id, folder_id)
 
     # set the quota for the group folder, in bytes, unless the quota is the
     # default (-3 for "unlimited")
@@ -337,6 +332,35 @@ def get_groupfolder_name(folder_id: int):
         )
     )
     return response.data and response.data.get('mount_point', None) or None
+
+
+def add_group_access_for_folder(group_id: str, folder_id: int) -> bool:
+    """ Adds a nextcloud group's access to a group folder.
+        Returns True if successful """
+    # assign our group access to the groupfolder
+    response = _response_or_raise(
+        requests.post(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders/{folder_id}/groups",
+            headers=HEADERS,
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+            data={"group": group_id},
+        )
+    )
+    return response.data and response.data.get('success', False) == True
+
+
+def remove_group_access_for_folder(group_id: str, folder_id: int) -> bool:
+    """ Removes a nextcloud group's access to a group folder.
+        Returns True if successful """
+    # take away our group's access to the groupfolder
+    response = _response_or_raise(
+        requests.delete(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders/{folder_id}/groups/{group_id}",
+            headers=HEADERS,
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+        )
+    )
+    return response.data and response.data.get('success', False) == True
 
 
 def files_search(
