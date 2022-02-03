@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand
 from cosinnus_cloud.utils.nextcloud import get_groupfolder_name
 from cosinnus.conf import settings
 from cosinnus.utils.group import get_cosinnus_group_model
+from cosinnus_cloud.utils.cosinnus import is_cloud_enabled_for_group
 
 
 
@@ -31,7 +32,7 @@ class Command(BaseCommand):
         for group in portal_groups:
             counter += 1
             # only run this for groups that have the cloud app activated
-            if not 'cosinnus_cloud' in group.get_deactivated_apps() and \
+            if is_cloud_enabled_for_group(group) and \
                     group.nextcloud_group_id and group.nextcloud_groupfolder_name and group.nextcloud_groupfolder_id:
                 checked +=1
                 

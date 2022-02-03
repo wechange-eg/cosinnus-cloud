@@ -20,6 +20,7 @@ from django.db.models.signals import post_save
 from cosinnus_cloud.utils.nextcloud import rename_group_and_group_folder
 from cosinnus.models.group_extra import CosinnusProject, CosinnusSociety
 from django.db.utils import DatabaseError
+from cosinnus_cloud.utils.cosinnus import is_cloud_enabled_for_group
 
 logger = logging.getLogger("cosinnus")
 
@@ -79,7 +80,7 @@ def nc_req_callback(future: Future):
 def user_joined_group_receiver_sub(sender, user, group, **kwargs):
     """ Triggers when a user properly joined (not only requested to join) a group """
     # only initialize if the cosinnus-app is actually activated
-    if 'cosinnus_cloud' not in group.get_deactivated_apps():
+    if is_cloud_enabled_for_group(group):
         if group.nextcloud_group_id is not None:
             logger.debug(
                 "User [%s] joined group [%s], adding him/her to Nextcloud",
@@ -227,7 +228,7 @@ def generate_group_nextcloud_field(group, field, save=True, force_generate=False
 @receiver(signals.group_object_created)
 def group_created_sub(sender, group, **kwargs):
     # only initialize if the cosinnus-app is actually activated
-    if 'cosinnus_cloud' not in group.get_deactivated_apps():
+    if is_cloud_enabled_for_group(group):
         submit_with_retry(
             initialize_nextcloud_for_group,
             group
@@ -237,7 +238,7 @@ def group_created_sub(sender, group, **kwargs):
 @receiver(signals.group_apps_activated)
 def group_cloud_app_activated_sub(sender, group, apps, **kwargs):
     """ Listen for the cloud app being activated """
-    if 'cosinnus_cloud' in apps:
+    if 'cosinnus_cloud' in apps and is_cloud_enabled_for_group(group):
         def _conurrent_wrap():
             initialize_nextcloud_for_group(group)
             for user in group.actual_members:
@@ -258,7 +259,7 @@ def rename_nextcloud_groupfolder_on_group_rename(sender, created, **kwargs):
     """ Tries to rename the nextcloud group folder to reflect a Group's naming change """
     if not created:
         group = kwargs.get('instance')
-        if not 'cosinnus_cloud' in group.get_deactivated_apps() and \
+        if is_cloud_enabled_for_group(group) and \
                 group.nextcloud_group_id and group.nextcloud_groupfolder_name and group.nextcloud_groupfolder_id:
             # just softly generate a new folder name first, and see if it has to be changed (because of a group rename)
             old_nextcloud_groupfolder_name = group.nextcloud_groupfolder_name
@@ -280,6 +281,8 @@ post_save.connect(rename_nextcloud_groupfolder_on_group_rename, sender=CosinnusS
 
     
 def initialize_nextcloud_for_group(group):
+    if not is_cloud_enabled_for_group(group):
+        return
     # generate group and groupfolder name
     generate_group_nextcloud_id(group, save=False)
     generate_group_nextcloud_groupfolder_name(group, save=False)

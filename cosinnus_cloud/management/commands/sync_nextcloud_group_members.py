@@ -22,6 +22,7 @@ from cosinnus.utils.group import get_cosinnus_group_model
 from cosinnus_cloud.utils import nextcloud
 from cosinnus.models.group import CosinnusPortal
 from cosinnus.utils.user import is_user_active
+from cosinnus_cloud.utils.cosinnus import is_cloud_enabled_for_group
 
 
 logger = logging.getLogger("cosinnus")
@@ -50,7 +51,7 @@ class Command(BaseCommand):
             for group in portal_groups:
                 counter += 1
                 # only run this for groups that have the cloud app activated
-                if not 'cosinnus_cloud' in group.get_deactivated_apps():
+                if is_cloud_enabled_for_group(group):
                     # add members to group
                     nextcloud_user_ids = [get_nc_user_id(member) for member in group.actual_members if is_user_active(member)]
                     # except for empty groups
