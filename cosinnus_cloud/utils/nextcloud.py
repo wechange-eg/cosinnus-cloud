@@ -363,6 +363,19 @@ def remove_group_access_for_folder(group_id: str, folder_id: int) -> bool:
     return response.data and response.data.get('success', False) == True
 
 
+def delete_groupfolder(folder_id: int) -> bool:
+    """ Deletes a nextcloud group folder.
+        Returns True if successful """
+    response = _response_or_raise(
+        requests.delete(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders/{folder_id}",
+            headers=HEADERS,
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+        )
+    )
+    return response.data and response.data.get('success', False) == True
+
+
 def files_search(
     folder_name=None,
     timeout=settings.COSINNUS_CLOUD_NEXTCLOUD_REQUEST_TIMEOUT,

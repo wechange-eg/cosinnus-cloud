@@ -1,27 +1,30 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import logging
 from concurrent.futures import ThreadPoolExecutor, Future
 from contextlib import wraps
+from cosinnus_cloud.utils.nextcloud import rename_group_and_group_folder
+import logging
+import re
+from threading import Thread
 from time import sleep
 
+from django.db.models.signals import post_save, post_delete
+from django.db.utils import DatabaseError
 from django.dispatch.dispatcher import receiver
 
 from cosinnus.conf import settings
 from cosinnus.core import signals
-
-from .utils import nextcloud
-import re
+from cosinnus.models import UserProfile
+from cosinnus.models.group_extra import CosinnusProject, CosinnusSociety, \
+    CosinnusConference
 from cosinnus.utils.functions import is_number
 from cosinnus.utils.group import get_cosinnus_group_model
-from django.db.models.signals import post_save
-from cosinnus_cloud.utils.nextcloud import rename_group_and_group_folder
-from cosinnus.models.group_extra import CosinnusProject, CosinnusSociety
 from cosinnus.utils.user import is_user_active
-from threading import Thread
-from django.db.utils import DatabaseError
 from cosinnus_cloud.utils.cosinnus import is_cloud_enabled_for_group
+
+from .utils import nextcloud
+
 
 logger = logging.getLogger("cosinnus")
 
@@ -81,82 +84,31 @@ def nc_req_callback(future: Future):
         logger.debug("Nextcloud call finished with result %r", res)
 
 
-@receiver(signals.user_joined_group)
-def user_joined_group_receiver_sub(sender, user, group, **kwargs):
-    """ Triggers when a user properly joined (not only requested to join) a group """
-    # only initialize if the cosinnus-app is actually activated
-    if is_cloud_enabled_for_group(group):
-        if group.nextcloud_group_id is not None:
-            logger.debug(
-                "User [%s] joined group [%s], adding him/her to Nextcloud",
-                get_user_display_name(user),
-                group.name,
-            )
-            submit_with_retry(
-                nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
-            )
 
-
-@receiver(signals.user_left_group)
-def user_left_group_receiver_sub(sender, user, group, **kwargs):
-    """ Triggers when a user left a group.  
-        Note: this can trigger on groups that do not have the cloud app activated, 
-              so that it removes users properly while the app is just disabled for 
-              a short period of time. """
-    if group.nextcloud_group_id is not None:
-        logger.debug(
-            "User [%s] left group [%s], removing him from Nextcloud",
-            get_user_display_name(user),
-            group.name,
-        )
+        
+def disable_group_folder_for_group(group):
+    """ For lack of a better way through the API, this 
+        'disables' a group folder for a CosinnusGroup by removing the nextcloud group's access
+        to the group folder, when a CosinnusGroup is deactivated """
+    if group.nextcloud_group_id and group.nextcloud_groupfolder_id:
         submit_with_retry(
-            nextcloud.remove_user_from_group,
-            get_nc_user_id(user),
+            nextcloud.remove_group_access_for_folder, 
             group.nextcloud_group_id,
+            group.nextcloud_groupfolder_id
         )
 
+def enable_group_folder_for_group(group):
+    """ For lack of a better way through the API, this 
+        'enables' a group folder for a CosinnusGroup by removing the nextcloud group's access
+        to the group folder, when a CosinnusGroup is deactivated """
+    if group.nextcloud_group_id and group.nextcloud_groupfolder_id:
+        submit_with_retry(
+            nextcloud.add_group_access_for_folder, 
+            group.nextcloud_group_id,
+            group.nextcloud_groupfolder_id
+        )
 
-@receiver(signals.userprofile_created)
-def userprofile_created_sub(sender, profile, **kwargs):
-    user = profile.user
-    logger.debug(
-        "User profile created, adding user [%s] to nextcloud ", get_user_display_name(user)
-    )
-    submit_with_retry(create_user_from_obj, user)
-
-
-from cosinnus.models import UserProfile
-@receiver(post_save, sender=UserProfile)
-def handle_profile_updated(sender, instance, created, **kwargs):
-    """
-    # TODO: add a check which field should be updated (should only be the name, and only if it changed)
     
-    # IMPORTANT: Needs to be threaded, because the endpoint is slooooow!
-    """ 
-    # only update active profiles 
-    if created or not instance.id:
-        return
-    user = instance.user
-    if not is_user_active(user):
-        return
-    # run the update threaded because it is a very slow endpoint
-    class UpdateNCUserThread(Thread):
-        def run(self):
-            try:
-                # we should actually use `update_user_from_obj`, but since
-                # the only field really updateable is the username (email is empty for now),
-                # we just use the direct method. and we don't submit_with_retry either,
-                # because if we fail this, we fail it
-                #submit_with_retry(update_user_from_obj, instance.user)
-                nextcloud.update_user_name( 
-                    get_nc_user_id(user),
-                    get_user_display_name(user),
-                )
-            except Exception as e:
-                logger.warning('Could not update Nextcloud user on profile update.', extra={'exc': e})
-    UpdateNCUserThread().start()
-
-
 def create_user_from_obj(user):
     """ Create a nextcloud user from a django auth User object """
     return nextcloud.create_user(
@@ -245,63 +197,6 @@ def generate_group_nextcloud_field(group, field, save=True, force_generate=False
     return unique_name
 
 
-@receiver(signals.group_object_created)
-def group_created_sub(sender, group, **kwargs):
-    # only initialize if the cosinnus-app is actually activated
-    if is_cloud_enabled_for_group(group):
-        submit_with_retry(
-            initialize_nextcloud_for_group,
-            group
-        )
-    
-    
-@receiver(signals.group_apps_activated)
-def group_cloud_app_activated_sub(sender, group, apps, **kwargs):
-    """ Listen for the cloud app being activated """
-    if 'cosinnus_cloud' in apps and is_cloud_enabled_for_group(group):
-        def _conurrent_wrap():
-            initialize_nextcloud_for_group(group)
-            for user in group.actual_members:
-                submit_with_retry(
-                    nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
-                )
-                # we don't need to remove users who have left the group while the app was deactivated here,
-                # because that listener is always active
-        submit_with_retry(_conurrent_wrap)
-
-
-@receiver(signals.group_apps_deactivated)
-def group_cloud_app_deactivated_sub(sender, group, apps, **kwargs):
-    # note: cannot use `is_cloud_enabled_for_group(group)` here, as it would fail since the app is already deactivated
-    if 'cosinnus_cloud' in apps and settings.COSINNUS_CLOUD_ENABLED:
-        disable_group_folder_for_group(group)
-
-
-def rename_nextcloud_groupfolder_on_group_rename(sender, created, **kwargs):
-    """ Tries to rename the nextcloud group folder to reflect a Group's naming change """
-    if not created:
-        group = kwargs.get('instance')
-        if is_cloud_enabled_for_group(group) and \
-                group.nextcloud_group_id and group.nextcloud_groupfolder_name and group.nextcloud_groupfolder_id:
-            # just softly generate a new folder name first, and see if it has to be changed (because of a group rename)
-            old_nextcloud_groupfolder_name = group.nextcloud_groupfolder_name
-            generate_group_nextcloud_groupfolder_name(group, save=False, force_generate=True)
-            new_nextcloud_groupfolder_name = group.nextcloud_groupfolder_name
-            # rename the folder if the name would be a different one
-            if new_nextcloud_groupfolder_name != old_nextcloud_groupfolder_name:
-                result = rename_group_and_group_folder(group.nextcloud_groupfolder_id, new_nextcloud_groupfolder_name)
-                # if the rename was successful, save the group. 
-                # otherwise, reload it to discard the newly generated folder name on the object
-                if result is True:
-                    group.save()
-                    return 
-            group.refresh_from_db()
-        
-post_save.connect(rename_nextcloud_groupfolder_on_group_rename, sender=get_cosinnus_group_model())
-post_save.connect(rename_nextcloud_groupfolder_on_group_rename, sender=CosinnusProject)
-post_save.connect(rename_nextcloud_groupfolder_on_group_rename, sender=CosinnusSociety)
-
-    
 def initialize_nextcloud_for_group(group):
     """ Initializes a nextcloud groupfolder for a group.
         Safe to call on already initialized folders. If called on a pre-existing folder that is 
@@ -342,72 +237,206 @@ def initialize_nextcloud_for_group(group):
     )
 
 
-# maybe listen to user_logged_in and user_logged_out too?
-# https://docs.djangoproject.com/en/3.0/ref/contrib/auth/#django.contrib.auth.signals.user_logged_in
+# only activate these hooks when the cloud is enabled
+if settings.COSINNUS_CLOUD_ENABLED:
 
-
-@receiver(signals.user_deactivated)
-def user_deactivated(sender, user, **kwargs):
-    submit_with_retry(
-        nextcloud.disable_user, 
-        get_nc_user_id(user)
-    )
-
-@receiver(signals.user_activated)
-def user_activated(sender, user, **kwargs):
-    submit_with_retry(
-        nextcloud.enable_user, 
-        get_nc_user_id(user)
-    )
-
-@receiver(signals.pre_userprofile_delete)
-def user_deleted(sender, profile, **kwargs):
-    """ Called when a user deletes their account. Completely deletes the user's nextcloud account """
-    submit_with_retry(
-        nextcloud.delete_user, 
-        get_nc_user_id(profile.user)
-    )
+    @receiver(signals.user_joined_group)
+    def user_joined_group_receiver_sub(sender, user, group, **kwargs):
+        """ Triggers when a user properly joined (not only requested to join) a group """
+        # only initialize if the cosinnus-app is actually activated
+        if is_cloud_enabled_for_group(group):
+            if group.nextcloud_group_id is not None:
+                logger.debug(
+                    "User [%s] joined group [%s], adding him/her to Nextcloud",
+                    get_user_display_name(user),
+                    group.name,
+                )
+                submit_with_retry(
+                    nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
+                )
     
-"""
-    TODO: we're missing an update-user hook to `nextcloud.update_user`!
-"""
-
-
-@receiver(signals.group_deactivated)
-def group_deactivated(sender, group, **kwargs):
-    if not is_cloud_enabled_for_group(group):
-        return
-    disable_group_folder_for_group(group)
-
-
-@receiver(signals.group_reactivated)
-def group_reactivated(sender, group, **kwargs):
-    if not is_cloud_enabled_for_group(group):
-        return
-    enable_group_folder_for_group(group)
-
     
-def disable_group_folder_for_group(group):
-    """ For lack of a better way through the API, this 
-        'disables' a group folder for a CosinnusGroup by removing the nextcloud group's access
-        to the group folder, when a CosinnusGroup is deactivated """
-    if group.nextcloud_group_id and group.nextcloud_groupfolder_id:
-        submit_with_retry(
-            nextcloud.remove_group_access_for_folder, 
-            group.nextcloud_group_id,
-            group.nextcloud_groupfolder_id
+    @receiver(signals.user_left_group)
+    def user_left_group_receiver_sub(sender, user, group, **kwargs):
+        """ Triggers when a user left a group.  
+            Note: this can trigger on groups that do not have the cloud app activated, 
+                  so that it removes users properly while the app is just disabled for 
+                  a short period of time. """
+        if group.nextcloud_group_id is not None:
+            logger.debug(
+                "User [%s] left group [%s], removing him from Nextcloud",
+                get_user_display_name(user),
+                group.name,
+            )
+            submit_with_retry(
+                nextcloud.remove_user_from_group,
+                get_nc_user_id(user),
+                group.nextcloud_group_id,
+            )
+    
+    
+    @receiver(signals.userprofile_created)
+    def userprofile_created_sub(sender, profile, **kwargs):
+        user = profile.user
+        logger.debug(
+            "User profile created, adding user [%s] to nextcloud ", get_user_display_name(user)
         )
+        submit_with_retry(create_user_from_obj, user)
+    
 
-def enable_group_folder_for_group(group):
-    """ For lack of a better way through the API, this 
-        'enables' a group folder for a CosinnusGroup by removing the nextcloud group's access
-        to the group folder, when a CosinnusGroup is deactivated """
-    if group.nextcloud_group_id and group.nextcloud_groupfolder_id:
+    @receiver(post_save, sender=UserProfile)
+    def handle_profile_updated(sender, instance, created, **kwargs):
+        """
+        # TODO: add a check which field should be updated (should only be the name, and only if it changed)
+        
+        # IMPORTANT: Needs to be threaded, because the endpoint is slooooow!
+        """ 
+        # only update active profiles 
+        if created or not instance.id:
+            return
+        user = instance.user
+        if not is_user_active(user):
+            return
+        # run the update threaded because it is a very slow endpoint
+        class UpdateNCUserThread(Thread):
+            def run(self):
+                try:
+                    # we should actually use `update_user_from_obj`, but since
+                    # the only field really updateable is the username (email is empty for now),
+                    # we just use the direct method. and we don't submit_with_retry either,
+                    # because if we fail this, we fail it
+                    #submit_with_retry(update_user_from_obj, instance.user)
+                    nextcloud.update_user_name( 
+                        get_nc_user_id(user),
+                        get_user_display_name(user),
+                    )
+                except Exception as e:
+                    logger.warning('Could not update Nextcloud user on profile update.', extra={'exc': e})
+        UpdateNCUserThread().start()
+    
+    
+    @receiver(signals.group_object_created)
+    def group_created_sub(sender, group, **kwargs):
+        # only initialize if the cosinnus-app is actually activated
+        if is_cloud_enabled_for_group(group):
+            submit_with_retry(
+                initialize_nextcloud_for_group,
+                group
+            )
+        
+        
+    @receiver(signals.group_apps_activated)
+    def group_cloud_app_activated_sub(sender, group, apps, **kwargs):
+        """ Listen for the cloud app being activated """
+        if 'cosinnus_cloud' in apps and is_cloud_enabled_for_group(group):
+            def _conurrent_wrap():
+                initialize_nextcloud_for_group(group)
+                for user in group.actual_members:
+                    submit_with_retry(
+                        nextcloud.add_user_to_group, get_nc_user_id(user), group.nextcloud_group_id
+                    )
+                    # we don't need to remove users who have left the group while the app was deactivated here,
+                    # because that listener is always active
+            submit_with_retry(_conurrent_wrap)
+    
+    
+    @receiver(signals.group_apps_deactivated)
+    def group_cloud_app_deactivated_sub(sender, group, apps, **kwargs):
+        # note: cannot use `is_cloud_enabled_for_group(group)` here, as it would fail since the app is already deactivated
+        if 'cosinnus_cloud' in apps and settings.COSINNUS_CLOUD_ENABLED:
+            disable_group_folder_for_group(group)
+    
+    
+    def rename_nextcloud_groupfolder_on_group_rename(sender, created, **kwargs):
+        """ Tries to rename the nextcloud group folder to reflect a Group's naming change """
+        if not created:
+            group = kwargs.get('instance')
+            if is_cloud_enabled_for_group(group) and \
+                    group.nextcloud_group_id and group.nextcloud_groupfolder_name and group.nextcloud_groupfolder_id:
+                # just softly generate a new folder name first, and see if it has to be changed (because of a group rename)
+                old_nextcloud_groupfolder_name = group.nextcloud_groupfolder_name
+                generate_group_nextcloud_groupfolder_name(group, save=False, force_generate=True)
+                new_nextcloud_groupfolder_name = group.nextcloud_groupfolder_name
+                # rename the folder if the name would be a different one
+                if new_nextcloud_groupfolder_name != old_nextcloud_groupfolder_name:
+                    result = rename_group_and_group_folder(group.nextcloud_groupfolder_id, new_nextcloud_groupfolder_name)
+                    # if the rename was successful, save the group. 
+                    # otherwise, reload it to discard the newly generated folder name on the object
+                    if result is True:
+                        group.save()
+                        return 
+                group.refresh_from_db()
+            
+    post_save.connect(rename_nextcloud_groupfolder_on_group_rename, sender=get_cosinnus_group_model())
+    post_save.connect(rename_nextcloud_groupfolder_on_group_rename, sender=CosinnusProject)
+    post_save.connect(rename_nextcloud_groupfolder_on_group_rename, sender=CosinnusSociety)
+    
+    
+    # maybe listen to user_logged_in and user_logged_out too?
+    # https://docs.djangoproject.com/en/3.0/ref/contrib/auth/#django.contrib.auth.signals.user_logged_in
+    
+    
+    @receiver(signals.user_deactivated)
+    def user_deactivated(sender, user, **kwargs):
         submit_with_retry(
-            nextcloud.add_group_access_for_folder, 
-            group.nextcloud_group_id,
-            group.nextcloud_groupfolder_id
+            nextcloud.disable_user, 
+            get_nc_user_id(user)
         )
-
-
-
+    
+    @receiver(signals.user_activated)
+    def user_activated(sender, user, **kwargs):
+        submit_with_retry(
+            nextcloud.enable_user, 
+            get_nc_user_id(user)
+        )
+    
+    @receiver(signals.pre_userprofile_delete)
+    def user_deleted(sender, profile, **kwargs):
+        """ Called when a user deletes their account. Completely deletes the user's nextcloud account """
+        submit_with_retry(
+            nextcloud.delete_user, 
+            get_nc_user_id(profile.user)
+        )
+        
+    """
+        TODO: we're missing an update-user hook to `nextcloud.update_user`!
+    """
+    
+    
+    @receiver(signals.group_deactivated)
+    def group_deactivated(sender, group, **kwargs):
+        if not is_cloud_enabled_for_group(group):
+            return
+        disable_group_folder_for_group(group)
+    
+    
+    @receiver(signals.group_reactivated)
+    def group_reactivated(sender, group, **kwargs):
+        if not is_cloud_enabled_for_group(group):
+            return
+        enable_group_folder_for_group(group)
+    
+    
+    @receiver(post_delete, sender=CosinnusProject)
+    @receiver(post_delete, sender=CosinnusSociety)
+    @receiver(post_delete, sender=CosinnusConference)
+    def handle_group_deleted(sender, instance, **kwargs):
+        """ Trigger to completely delete a group folder when a group is deleted.
+            We have CosinnusConference in here as backwards compatibility, because for some conferences, 
+            folders might have been created. """
+        # note: cannot use `is_cloud_enabled_for_group(group)` here, as it would fail since the app is already deactivated
+        group = instance
+        if group.nextcloud_group_id and group.nextcloud_groupfolder_id and group.nextcloud_groupfolder_name:
+            extra = {
+                'group_id': group.id, 
+                'group_slug': group.slug, 
+                'nc_groupfolder_id': group.nextcloud_groupfolder_id, 
+                'nc_group_id': group.nextcloud_group_id, 
+                'nc_groupfolder_name': group.nextcloud_groupfolder_name,
+            }
+            logger.info('Nextcloud: Log: Deleted a groupfolder on group deletion.', extra=extra)
+            submit_with_retry(
+                nextcloud.delete_groupfolder, 
+                group.nextcloud_groupfolder_id
+            )
+    
