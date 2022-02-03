@@ -9,6 +9,7 @@ from cosinnus.conf import settings
 from cosinnus.models.tagged import BaseTaggableObjectModel
 from annoying.functions import get_object_or_None
 from django.utils.crypto import get_random_string
+from cosinnus_cloud.utils.cosinnus import is_cloud_enabled_for_group
 
 
 class CloudFile(object):
@@ -157,7 +158,7 @@ class LinkedCloudFile(BaseTaggableObjectModel):
         """ A droping for `cosinnus.view.attached_object.AttachableObjectSelect2View` to get attachable
             objects in a non-DB-based query. """
         # Check if cloud is enabled for group
-        if 'cosinnus_cloud' in group.get_deactivated_apps() or \
+        if not is_cloud_enabled_for_group(group) or \
                 not group.nextcloud_group_id or \
                 not group.nextcloud_groupfolder_name:
             return []

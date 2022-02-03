@@ -324,7 +324,19 @@ def rename_group_and_group_folder(folder_id: int, new_name: str):
             data={"mountpoint": new_name},
         )
     )
-    return response.data and response.data == True
+    return response.data and response.data.get('success', False) == True
+
+
+def get_groupfolder_name(folder_id: int):
+    """ Retrieves a group folder name for a given id (int) """
+    response = _response_or_raise(
+        requests.get(
+            f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/apps/groupfolders/folders/{folder_id}",
+            headers=HEADERS,
+            auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+        )
+    )
+    return response.data and response.data.get('mount_point', None) or None
 
 
 def files_search(

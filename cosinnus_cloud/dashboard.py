@@ -16,6 +16,7 @@ from cosinnus.conf import settings
 
 import logging
 from django.utils.encoding import force_text
+from cosinnus_cloud.utils.cosinnus import is_cloud_enabled_for_group
 logger = logging.getLogger('cosinnus')
 
 
@@ -43,7 +44,7 @@ class Latest(DashboardWidget):
         total_count = 0
         has_more = False
         had_error = False
-        if (not 'cosinnus_cloud' in self.config.group.get_deactivated_apps() and 
+        if (is_cloud_enabled_for_group(self.config.group) and 
                 self.config.group.nextcloud_group_id and self.config.group.nextcloud_groupfolder_name):
             try:
                 response = nextcloud.find_newest_files(
