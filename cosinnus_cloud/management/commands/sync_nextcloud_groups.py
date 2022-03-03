@@ -20,6 +20,7 @@ from cosinnus_cloud.hooks import (
 from cosinnus_cloud.utils.nextcloud import OCSException
 from cosinnus.utils.group import get_cosinnus_group_model
 from cosinnus_cloud.utils import nextcloud
+from cosinnus_cloud.utils.cosinnus import is_cloud_enabled_for_group
 
 
 logger = logging.getLogger("cosinnus")
@@ -47,7 +48,7 @@ class Command(BaseCommand):
             for group in portal_groups:
                 counter += 1
                 # only run this for groups that have the cloud app activated
-                if not 'cosinnus_cloud' in group.get_deactivated_apps():
+                if is_cloud_enabled_for_group(group):
                     
                     # create and validate group and groupfolder name
                     current_group_created = False
