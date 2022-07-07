@@ -223,6 +223,18 @@ def create_group(groupid: str) -> Optional[OCSResponse]:
             return None
         raise
 
+def delete_group(groupid: str) -> Optional[OCSResponse]:
+    try:
+        return _response_or_raise(
+            requests.delete(
+                f"{settings.COSINNUS_CLOUD_NEXTCLOUD_URL}/ocs/v1.php/cloud/groups/{groupid}",
+                auth=settings.COSINNUS_CLOUD_NEXTCLOUD_AUTH,
+                headers=HEADERS,
+            )
+        )
+    except OCSException as e:
+        raise
+
 
 def create_group_folder(
     name: str, group_id: str, group, raise_on_existing_name=True

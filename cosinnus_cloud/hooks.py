@@ -21,7 +21,6 @@ from cosinnus.models.group_extra import CosinnusProject, CosinnusSociety, \
 from cosinnus.utils.functions import is_number
 from cosinnus.utils.group import get_cosinnus_group_model
 from django.db.models.signals import post_save
-from cosinnus_cloud.utils.nextcloud import rename_group_and_group_folder
 from cosinnus.models.group_extra import CosinnusProject, CosinnusSociety
 from django.db.utils import DatabaseError
 from cosinnus_cloud.utils.cosinnus import is_cloud_enabled_for_group
@@ -439,9 +438,13 @@ if settings.COSINNUS_CLOUD_ENABLED:
                 'nc_group_id': group.nextcloud_group_id, 
                 'nc_groupfolder_name': group.nextcloud_groupfolder_name,
             }
-            logger.info('Nextcloud: Log: Deleted a groupfolder on group deletion.', extra=extra)
+            logger.info('Nextcloud: Log: Deleting a groupfolder on group deletion.', extra=extra)
             submit_with_retry(
                 nextcloud.delete_groupfolder, 
                 group.nextcloud_groupfolder_id
             )
-    
+            submit_with_retry(
+                nextcloud.delete_group, 
+                group.nextcloud_group_id
+            )
+            logger.info('Nextcloud: Log: Deleted a groupfolder on group deletion.', extra=extra)
