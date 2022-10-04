@@ -197,7 +197,7 @@ def generate_group_nextcloud_field(group, field, save=True, force_generate=False
     
     setattr(group, field, unique_name)
     if save == True:
-        group.save(update_fields=['field'])
+        group.save(update_fields=[field])
     return unique_name
 
 
